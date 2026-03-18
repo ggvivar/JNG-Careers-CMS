@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class RoleModel extends Model
+{
+    protected $table = 'roles';
+    protected $primaryKey = 'id';
+    protected $returnType = 'array';
+
+    protected $allowedFields = [
+        'name',
+        'status_id',
+        'date_created',
+        'date_updated',
+        'date_deleted',
+    ];
+}
