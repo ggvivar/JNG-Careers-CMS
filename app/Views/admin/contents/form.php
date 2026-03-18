@@ -404,7 +404,10 @@ $validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strt
                             oninput="previewMainUrl(this)"
                         >
                     </div>
-
+                    <div class="col-12">
+                        <label class="form-label">Image Description</label>
+                        <textarea class="form-control" name="image_description" rows="3"><?= esc(old('image_description', $content['image_description'] ?? '')) ?></textarea>
+                    </div>
                     <div class="col-12">
                         <label class="form-label">Preview</label>
                         <div class="preview-box">
@@ -520,6 +523,14 @@ $validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strt
                                                 placeholder="https://example.com/image.jpg"
                                                 oninput="previewSubsectionUrl(this)"
                                             >
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label">Image Description</label>
+                                            <textarea
+                                                name="subsections[<?= $i ?>][image_description]"
+                                                class="form-control"
+                                                placeholder="Image Description"
+                                            ><?= esc($sub['image_description'] ?? '') ?></textarea>
                                         </div>
 
                                         <div class="col-12 col-lg-4">
@@ -703,7 +714,12 @@ function addSubsection() {
                            placeholder="https://example.com/image.jpg"
                            oninput="previewSubsectionUrl(this)">
                 </div>
-
+                <div class="col-12">
+                    <label class="form-label">Image Description</label>
+                    <textarea name="subsections[${subsectionIndex}][image_description]"
+                              class="form-control"
+                              placeholder="Image Description"></textarea>
+                </div>
                 <div class="col-12 col-lg-4">
                     <label class="form-label">Rank</label>
                     <input type="hidden"

@@ -22,6 +22,7 @@ class ContentModel extends Model
         'attachment',
         'image_path',
         'image_url',
+        'image_description',
         'external_link',
         'tags',
         'validity_date_start',

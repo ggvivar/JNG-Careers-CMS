@@ -8,225 +8,48 @@ class ContentController extends BaseController
 {
     public function all()
     {
-        $db = db_connect();
-
-        $rows = $db->table('contents c')
-            ->select('
-                c.id,
-                c.main_content_id,
-                c.name,
-                c.description,
-                c.body,
-                c.image_path,
-                c.image_url,
-                c.external_link,
-                c.tags,
-                c.rank,
-                c.validity_date_start,
-                c.validity_date_end,
-                c.date_created,
-                c.date_updated,
-                m.name as module_name,
-                m.key1 as module_key1,
-                m.key2 as module_key2,
-                m.key3 as module_key3,
-                cat.name as category_name,
-                cat.key1 as category_key1,
-                cat.key2 as category_key2,
-                cat.key3 as category_key3,
-                s.name as status_name,
-                p.name as parent_name
-            ')
-            ->join('modules m', 'm.id = c.module_id', 'left')
-            ->join('category cat', 'cat.id = c.category_id', 'left')
-            ->join('status s', 's.id = c.status_id', 'left')
-            ->join('contents p', 'p.id = c.main_content_id', 'left')
-            ->where('c.date_deleted', null)
-            ->where('c.main_content_id', null)
-            ->groupStart()
-                ->where('s.name', 'Published')
-                ->orWhere('s.name', 'Approved')
-                ->orWhere('s.name', 'Active')
-            ->groupEnd()
-            ->orderBy('c.rank', 'ASC')
-            ->orderBy('c.id', 'DESC')
+        $rows = $this->baseQuery()
             ->get()
             ->getResultArray();
 
-        $rows = $this->attachSubsections($rows);
-        
-        return $this->response->setJSON([
-            'status' => true,
-            'count' => count($rows),
-            'data' => $rows,
-        ]);
+        return $this->respondWithSubsections($rows);
     }
 
     public function byCategory($category)
     {
-        $db = db_connect();
-
-        $rows = $db->table('contents c')
-            ->select('
-                c.id,
-                c.main_content_id,
-                c.name,
-                c.description,
-                c.body,
-                c.image_path,
-                c.image_url,
-                c.external_link,
-                c.tags,
-                c.rank,
-                c.validity_date_start,
-                c.validity_date_end,
-                c.date_created,
-                c.date_updated,
-                m.name as module_name,
-                m.key1 as module_key1,
-                m.key2 as module_key2,
-                m.key3 as module_key3,
-                cat.name as category_name,
-                cat.key1 as category_key1,
-                cat.key2 as category_key2,
-                cat.key3 as category_key3,
-                s.name as status_name,
-                p.name as parent_name
-            ')
-            ->join('modules m', 'm.id = c.module_id', 'left')
-            ->join('category cat', 'cat.id = c.category_id', 'left')
-            ->join('status s', 's.id = c.status_id', 'left')
-            ->join('contents p', 'p.id = c.main_content_id', 'left')
-            ->where('c.date_deleted', null)
-            ->where('c.main_content_id', null)
+        $rows = $this->baseQuery()
             ->groupStart()
                 ->where('LOWER(cat.name)', strtolower($category))
                 ->orWhere('LOWER(cat.key1)', strtolower($category))
                 ->orWhere('LOWER(cat.key2)', strtolower($category))
                 ->orWhere('LOWER(cat.key3)', strtolower($category))
             ->groupEnd()
-            ->groupStart()
-                ->where('s.name', 'Published')
-                ->orWhere('s.name', 'Approved')
-                ->orWhere('s.name', 'Active')
-            ->groupEnd()
-            ->orderBy('c.rank', 'ASC')
-            ->orderBy('c.id', 'DESC')
             ->get()
             ->getResultArray();
 
-        $rows = $this->attachSubsections($rows);
-
-        return $this->response->setJSON([
-            'status' => true,
-            'category' => $category,
-            'count' => count($rows),
-            'data' => $rows,
+        return $this->respondWithSubsections($rows, [
+            'category' => $category
         ]);
     }
+
     public function year($year)
     {
-        $db = db_connect();
-        $date = date('Y');
-        dd($date);
-        dd(date_format($date,'%Y'));
-        $rows = $db->table('contents c')
-            ->select('
-                c.id,
-                c.main_content_id,
-                c.name,
-                c.description,
-                c.body,
-                c.image_path,
-                c.image_url,
-                c.external_link,
-                c.tags,
-                c.rank,
-                c.validity_date_start,
-                c.validity_date_end,
-                c.date_created,
-                c.date_updated,
-                m.name as module_name,
-                m.key1 as module_key1,
-                m.key2 as module_key2,
-                m.key3 as module_key3,
-                cat.name as category_name,
-                cat.key1 as category_key1,
-                cat.key2 as category_key2,
-                cat.key3 as category_key3,
-                s.name as status_name,
-                p.name as parent_name
-            ')
-            ->join('modules m', 'm.id = c.module_id', 'left')
-            ->join('category cat', 'cat.id = c.category_id', 'left')
-            ->join('status s', 's.id = c.status_id', 'left')
-            ->join('contents p', 'p.id = c.main_content_id', 'left')
-            ->where('c.date_deleted', null)
-            ->where(date_format(date('c.date_created'),'%Y'),$year)
-            ->where('c.main_content_id', null)
-            ->groupStart()
-                ->where('LOWER(cat.name)', strtolower($category))
-                ->orWhere('LOWER(cat.key1)', strtolower($category))
-                ->orWhere('LOWER(cat.key2)', strtolower($category))
-                ->orWhere('LOWER(cat.key3)', strtolower($category))
-            ->groupEnd()
-            ->groupStart()
-                ->where('s.name', 'Published')
-                ->orWhere('s.name', 'Approved')
-                ->orWhere('s.name', 'Active')
-            ->groupEnd()
-            ->orderBy('c.rank', 'ASC')
-            ->orderBy('c.id', 'DESC')
+        $year = (int) $year;
+
+        $rows = $this->baseQuery()
+            ->where('c.date_created >=', $year . '-01-01 00:00:00')
+            ->where('c.date_created <=', $year . '-12-31 23:59:59')
             ->get()
             ->getResultArray();
 
-        $rows = $this->attachSubsections($rows);
-
-        return $this->response->setJSON([
-            'status' => true,
-            'category' => $category,
-            'count' => count($rows),
-            'data' => $rows,
+        return $this->respondWithSubsections($rows, [
+            'year' => $year
         ]);
     }
 
     public function byCategoryKeys($category, $key1, $key2, $key3)
     {
-        $db = db_connect();
-
-        $rows = $db->table('contents c')
-            ->select('
-                c.id,
-                c.main_content_id,
-                c.name,
-                c.description,
-                c.body,
-                c.image_path,
-                c.image_url,
-                c.external_link,
-                c.tags,
-                c.rank,
-                c.validity_date_start,
-                c.validity_date_end,
-                c.date_created,
-                c.date_updated,
-                m.name as module_name,
-                m.key1 as module_key1,
-                m.key2 as module_key2,
-                m.key3 as module_key3,
-                cat.name as category_name,
-                cat.key1 as category_key1,
-                cat.key2 as category_key2,
-                cat.key3 as category_key3,
-                s.name as status_name,
-                p.name as parent_name
-            ')
-            ->join('modules m', 'm.id = c.module_id', 'left')
-            ->join('category cat', 'cat.id = c.category_id', 'left')
-            ->join('status s', 's.id = c.status_id', 'left')
-            ->join('contents p', 'p.id = c.main_content_id', 'left')
-            ->where('c.date_deleted', null)
-            ->where('c.main_content_id', null)
+        $rows = $this->baseQuery()
             ->groupStart()
                 ->where('LOWER(cat.name)', strtolower($category))
                 ->orWhere('LOWER(cat.key1)', strtolower($category))
@@ -236,27 +59,73 @@ class ContentController extends BaseController
             ->where('LOWER(m.key1)', strtolower($key1))
             ->where('LOWER(m.key2)', strtolower($key2))
             ->where('LOWER(m.key3)', strtolower($key3))
-            ->groupStart()
-                ->where('s.name', 'Published')
-                ->orWhere('s.name', 'Approved')
-                ->orWhere('s.name', 'Active')
-            ->groupEnd()
-            ->orderBy('c.rank', 'ASC')
-            ->orderBy('c.id', 'DESC')
             ->get()
             ->getResultArray();
 
-        $rows = $this->attachSubsections($rows);
-
-        return $this->response->setJSON([
-            'status' => true,
+        return $this->respondWithSubsections($rows, [
             'category' => $category,
             'key1' => $key1,
             'key2' => $key2,
             'key3' => $key3,
+        ]);
+    }
+
+    /**
+     * 🔥 BASE QUERY (reuse everywhere)
+     */
+    private function baseQuery()
+    {
+        $db = db_connect();
+
+        return $db->table('contents c')
+            ->select('
+                c.id,
+                c.main_content_id,
+                c.name,
+                c.description,
+                c.body,
+                c.image_path,
+                c.image_url,
+                c.external_link,
+                c.tags,
+                c.rank,
+                c.validity_date_start,
+                c.validity_date_end,
+                c.date_created,
+                c.date_updated,
+                m.name as module_name,
+                m.key1 as module_key1,
+                m.key2 as module_key2,
+                m.key3 as module_key3,
+                cat.name as category_name,
+                cat.key1 as category_key1,
+                cat.key2 as category_key2,
+                cat.key3 as category_key3,
+                s.name as status_name,
+                p.name as parent_name
+            ')
+            ->join('modules m', 'm.id = c.module_id', 'left')
+            ->join('category cat', 'cat.id = c.category_id', 'left')
+            ->join('status s', 's.id = c.status_id', 'left')
+            ->join('contents p', 'p.id = c.main_content_id', 'left')
+            ->where('c.date_deleted', null)
+            ->where('c.main_content_id', null)
+            ->groupStart()
+                ->whereIn('s.name', ['Published', 'Approved', 'Active'])
+            ->groupEnd()
+            ->orderBy('c.rank', 'ASC')
+            ->orderBy('c.id', 'DESC');
+    }
+
+    private function respondWithSubsections(array $rows, array $extra = [])
+    {
+        $rows = $this->attachSubsections($rows);
+
+        return $this->response->setJSON(array_merge([
+            'status' => true,
             'count' => count($rows),
             'data' => $rows,
-        ]);
+        ], $extra));
     }
 
     private function attachSubsections(array $rows): array
@@ -292,31 +161,28 @@ class ContentController extends BaseController
             ->get()
             ->getResultArray();
 
-        $grouped = [];
-        foreach ($subsections as $sub) {
-            $parentId = (int) $sub['main_content_id'];
-            $grouped[$parentId][] = $sub;
-        }
-
-        foreach ($rows as &$row) {
-            $row['subsections'] = $grouped[(int) $row['id']] ?? [];
-            $row['tags'] = $this->decodeTags($row['tags'] ?? null);
-        }
-        unset($row);
-
         foreach ($subsections as &$sub) {
             $sub['tags'] = $this->decodeTags($sub['tags'] ?? null);
         }
         unset($sub);
+
+        $grouped = [];
+        foreach ($subsections as $sub) {
+            $grouped[$sub['main_content_id']][] = $sub;
+        }
+
+        foreach ($rows as &$row) {
+            $row['tags'] = $this->decodeTags($row['tags'] ?? null);
+            $row['subsections'] = $grouped[$row['id']] ?? [];
+        }
+        unset($row);
 
         return $rows;
     }
 
     private function decodeTags($tags): array
     {
-        if (empty($tags)) {
-            return [];
-        }
+        if (empty($tags)) return [];
 
         $decoded = json_decode((string) $tags, true);
         return is_array($decoded) ? $decoded : [];
