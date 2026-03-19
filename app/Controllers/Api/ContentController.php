@@ -64,8 +64,8 @@ private function respondGroupedByCategoryAndYear(array $rows)
 
     foreach ($rows as $row) {
         $categoryName = strtolower($row['category_name'] ?? 'uncategorized');
-        $year = !empty($row['date_created']) ? (int) date('Y', strtotime($row['date_created'])) : null;
-
+        $year = !empty($row['validity_date_start']) ? (int) date('Y', strtotime($row['validity_date_start'])) : null;
+        // dd($row);
         if (!$year) {
             continue;
         }
@@ -85,7 +85,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
             'lead' => $row['lead'],
             'description' => $row['description'],
             'image' => $row['image'],
-            'date' => !empty($row['date_created']) ? date('Y-m-d', strtotime($row['date_created'])) : null,
+            'date' => !empty($row['validity_date_start']) ? date('Y-m-d', strtotime($row['validity_date_start'])) : null,
             'tags' => $row['tags'] ?? [],
             'rank' => $row['rank'],
             'sections' => array_map(function ($section) {
@@ -94,7 +94,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
                     'title' => $section['title'],
                     'description' => $section['description'],
                     'image' => $section['image'],
-                    'date' => !empty($section['date_created']) ? date('Y-m-d', strtotime($section['date_created'])) : null,
+                    'date' => !empty($section['validity_date_start']) ? date('Y-m-d', strtotime($section['validity_date_start'])) : null,
                 ];
             }, $row['subsections'] ?? [])
         ];
@@ -108,7 +108,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
         foreach ($years as $yearData) {
             $result[] = [
                 'category_name' => $categoryName,
-                'data' => $yearData
+                'years' => $yearData
             ];
         }
     }
