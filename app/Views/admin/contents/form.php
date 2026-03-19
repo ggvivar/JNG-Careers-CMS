@@ -111,6 +111,10 @@ $validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strt
         min-height: 110px;
     }
 
+    .ck-editor__editable_inline {
+        min-height: 180px;
+    }
+
     .preview-box {
         min-height: 220px;
         border: 1px dashed #d0d5dd;
@@ -313,12 +317,12 @@ $validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strt
 
                     <div class="col-12">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3"><?= esc(old('description', $content['description'] ?? '')) ?></textarea>
+                        <textarea class="form-control richtext" name="description" rows="3"><?= old('description', $content['description'] ?? '') ?></textarea>
                     </div>
 
                     <div class="col-12">
                         <label class="form-label">Body</label>
-                        <textarea class="form-control" name="body" rows="8"><?= esc(old('body', $content['body'] ?? '')) ?></textarea>
+                        <textarea class="form-control richtext" name="body" rows="8"><?= old('body', $content['body'] ?? '') ?></textarea>
                     </div>
 
                     <div class="col-12 col-lg-6">
@@ -488,18 +492,18 @@ $validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strt
                                             <label class="form-label">Description</label>
                                             <textarea
                                                 name="subsections[<?= $i ?>][description]"
-                                                class="form-control"
+                                                class="form-control richtext"
                                                 placeholder="Description"
-                                            ><?= esc($sub['description'] ?? '') ?></textarea>
+                                            ><?= $sub['description'] ?? '' ?></textarea>
                                         </div>
 
                                         <div class="col-12">
                                             <label class="form-label">Body</label>
                                             <textarea
                                                 name="subsections[<?= $i ?>][body]"
-                                                class="form-control"
+                                                class="form-control richtext"
                                                 placeholder="Body"
-                                            ><?= esc($sub['body'] ?? '') ?></textarea>
+                                            ><?= $sub['body'] ?? '' ?></textarea>
                                         </div>
 
                                         <div class="col-12 col-lg-6">
@@ -584,10 +588,13 @@ $validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strt
     </form>
 </div>
 
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+
 <script>
 let subsectionIndex = <?= !empty($subsections) ? count($subsections) : 0 ?>;
 let slugEdited = false;
 let draggedItem = null;
+let editors = [];
 
 function generateSlug(text) {
     return text
@@ -597,6 +604,24 @@ function generateSlug(text) {
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
         .replace(/^-+|-+$/g, '');
+}
+
+function initRichTextEditors(scope = document) {
+    const elements = scope.querySelectorAll('textarea.richtext');
+
+    elements.forEach(el => {
+        if (el.dataset.editorInitialized === 'true') return;
+
+        ClassicEditor
+            .create(el)
+            .then(editor => {
+                editors.push(editor);
+                el.dataset.editorInitialized = 'true';
+            })
+            .catch(error => {
+                console.error(error);
+            });
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -619,6 +644,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initDragAndDrop();
     refreshSubsectionRanks();
+    initRichTextEditors();
 });
 
 function autoSlugSubsection(input) {
@@ -686,14 +712,14 @@ function addSubsection() {
                 <div class="col-12">
                     <label class="form-label">Description</label>
                     <textarea name="subsections[${subsectionIndex}][description]"
-                              class="form-control"
+                              class="form-control richtext"
                               placeholder="Description"></textarea>
                 </div>
 
                 <div class="col-12">
                     <label class="form-label">Body</label>
                     <textarea name="subsections[${subsectionIndex}][body]"
-                              class="form-control"
+                              class="form-control richtext"
                               placeholder="Body"></textarea>
                 </div>
 
@@ -741,9 +767,11 @@ function addSubsection() {
     `;
 
     container.insertAdjacentHTML('beforeend', html);
+    const newItem = container.lastElementChild;
     subsectionIndex++;
     initDragAndDrop();
     refreshSubsectionRanks();
+    initRichTextEditors(newItem);
 }
 
 function removeSubsection(button) {

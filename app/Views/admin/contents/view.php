@@ -108,10 +108,6 @@
     font-size: 0.98rem;
   }
 
-  .content-body p:last-child {
-    margin-bottom: 0;
-  }
-
   .subsection-accordion .accordion-item {
     border: 1px solid #e5e7eb;
     border-radius: 16px !important;
@@ -161,6 +157,58 @@
   .subsection-body {
     color: #475467;
     line-height: 1.7;
+  }
+
+  .content-description,
+  .content-body,
+  .subsection-description,
+  .subsection-body {
+    line-height: 1.75;
+  }
+
+  .content-description p:last-child,
+  .content-body p:last-child,
+  .subsection-description p:last-child,
+  .subsection-body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .content-description ul,
+  .content-description ol,
+  .content-body ul,
+  .content-body ol,
+  .subsection-description ul,
+  .subsection-description ol,
+  .subsection-body ul,
+  .subsection-body ol {
+    padding-left: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .content-description img,
+  .content-body img,
+  .subsection-description img,
+  .subsection-body img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+  }
+
+  .content-description h1,
+  .content-description h2,
+  .content-description h3,
+  .content-body h1,
+  .content-body h2,
+  .content-body h3,
+  .subsection-description h1,
+  .subsection-description h2,
+  .subsection-description h3,
+  .subsection-body h1,
+  .subsection-body h2,
+  .subsection-body h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.75rem;
+    color: #1f2937;
   }
 
   .empty-subsection-state {
@@ -262,7 +310,7 @@
 
       <?php if (!empty($content['description'])): ?>
         <div class="content-description">
-          <?= esc($content['description']) ?>
+          <?= $content['description'] ?>
         </div>
       <?php endif; ?>
 
@@ -322,7 +370,7 @@
 
                   <?php if (!empty($sub['description'])): ?>
                     <div class="subsection-description">
-                      <?= esc($sub['description']) ?>
+                      <?= $sub['description'] ?>
                     </div>
                   <?php endif; ?>
 
