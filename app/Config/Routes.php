@@ -119,8 +119,13 @@ $routes->get('send', 'NotificationApiController::send');
 $routes->get('send_attachment', 'NotificationApiController::send_attachment');
     //Contents
     $routes->get('content/all', 'ContentController::all');
+    //Content-Category
+    
     $routes->get('content/(:segment)/(:segment)/(:segment)/(:segment)', 'ContentController::byCategoryKeys/$1/$2/$3/$4');
-    $routes->get('content/(:segment)', 'ContentController::byCategory/$1');
+    $routes->get('content/category', 'ContentController::byCategory');
+    $routes->get('content/category/(:segment)', 'ContentController::byCategory/$1');
+
+
     $routes->get('content/year/(:segment)', 'ContentController::year/$1');
      // applicant auth
     $routes->post('applicant/register', 'ApplicantController::register');

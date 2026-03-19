@@ -15,9 +15,29 @@ class ContentController extends BaseController
         return $this->respondWithSubsections($rows);
     }
 
-    public function byCategory($category)
-    {
-        $rows = $this->baseQuery()
+    // public function byCategory($category=null)
+    // {   
+    //     // dd($category);
+    //     $rows = $this->baseQuery()
+    //         ->groupStart()
+    //             ->where('LOWER(cat.name)', strtolower($category))
+    //             ->orWhere('LOWER(cat.key1)', strtolower($category))
+    //             ->orWhere('LOWER(cat.key2)', strtolower($category))
+    //             ->orWhere('LOWER(cat.key3)', strtolower($category))
+    //         ->groupEnd()
+    //         ->get()
+    //         ->getResultArray();
+
+    //     return $this->respondWithSubsections($rows, [
+    //         'category' => $category
+    //     ]);
+    // }
+    public function byCategory($category = null)
+{
+    $query = $this->baseQuery();
+
+    if (!empty($category)) {
+        $rows = $query
             ->groupStart()
                 ->where('LOWER(cat.name)', strtolower($category))
                 ->orWhere('LOWER(cat.key1)', strtolower($category))
@@ -32,6 +52,73 @@ class ContentController extends BaseController
         ]);
     }
 
+    $rows = $query->get()->getResultArray();
+
+    return $this->respondGroupedByCategoryAndYear($rows);
+}
+private function respondGroupedByCategoryAndYear(array $rows)
+{
+    $rows = $this->attachSubsections($rows);
+
+    $grouped = [];
+
+    foreach ($rows as $row) {
+        $categoryName = strtolower($row['category_name'] ?? 'uncategorized');
+        $year = !empty($row['date_created']) ? (int) date('Y', strtotime($row['date_created'])) : null;
+
+        if (!$year) {
+            continue;
+        }
+
+        if (!isset($grouped[$categoryName][$year])) {
+            $grouped[$categoryName][$year] = [
+                'id' => $year,
+                'year' => $year,
+                'items' => []
+            ];
+        }
+
+        $grouped[$categoryName][$year]['items'][] = [
+            'id' => $row['id'],
+            'title' => $row['title'],
+            'slug' => $row['slug'],
+            'lead' => $row['lead'],
+            'description' => $row['description'],
+            'image' => $row['image'],
+            'date' => !empty($row['date_created']) ? date('Y-m-d', strtotime($row['date_created'])) : null,
+            'tags' => $row['tags'] ?? [],
+            'rank' => $row['rank'],
+            'sections' => array_map(function ($section) {
+                return [
+                    'id' => $section['id'],
+                    'title' => $section['title'],
+                    'description' => $section['description'],
+                    'image' => $section['image'],
+                    'date' => !empty($section['date_created']) ? date('Y-m-d', strtotime($section['date_created'])) : null,
+                ];
+            }, $row['subsections'] ?? [])
+        ];
+    }
+
+    $result = [];
+
+    foreach ($grouped as $categoryName => $years) {
+        krsort($years); // latest year first
+
+        foreach ($years as $yearData) {
+            $result[] = [
+                'category_name' => $categoryName,
+                'data' => $yearData
+            ];
+        }
+    }
+
+    return $this->response->setJSON([
+        'status' => true,
+        'category' => 'category',
+        'data' => $result
+    ]);
+}
     public function year($year)
     {
         $year = (int) $year;
@@ -81,12 +168,13 @@ class ContentController extends BaseController
             ->select('
                 c.id,
                 c.main_content_id,
-                c.name,
-                c.description,
-                c.body,
+                c.name as title,
+                c.slug,
+                c.description as lead,
+                c.body as description,
                 c.image_path,
-                c.image_url,
-                c.external_link,
+                c.image_url as image,
+                c.external_link as link,
                 c.tags,
                 c.rank,
                 c.validity_date_start,
@@ -111,7 +199,7 @@ class ContentController extends BaseController
             ->where('c.date_deleted', null)
             ->where('c.main_content_id', null)
             ->groupStart()
-                ->whereIn('s.name', ['Published', 'Approved', 'Active'])
+                ->whereIn('s.name', ['Published'])
             ->groupEnd()
             ->orderBy('c.rank', 'ASC')
             ->orderBy('c.id', 'DESC');
@@ -141,18 +229,18 @@ class ContentController extends BaseController
             ->select('
                 c.id,
                 c.main_content_id,
-                c.name,
-                c.description,
-                c.body,
+                c.name as title,
+                c.slug,
+                c.description as lead,
+                c.body as description,
                 c.image_path,
-                c.image_url,
-                c.external_link,
+                c.image_url as image,
+                c.external_link as link,
                 c.tags,
                 c.rank,
                 c.validity_date_start,
                 c.validity_date_end,
-                c.date_created,
-                c.date_updated
+                c.date_created
             ')
             ->whereIn('c.main_content_id', $ids)
             ->where('c.date_deleted', null)
