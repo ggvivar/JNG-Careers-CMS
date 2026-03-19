@@ -105,12 +105,18 @@ private function respondGroupedByCategoryAndYear(array $rows)
     foreach ($grouped as $categoryName => $years) {
         krsort($years); // latest year first
 
-        foreach ($years as $yearData) {
+        //  foreach ($years as $yearData) {
+        //     $result[] = [
+        //         'category_name' => $categoryName,
+        //         'years' => $yearData
+        //     ];
+        // }
+        // foreach ($years as $yearData) {
             $result[] = [
                 'category_name' => $categoryName,
-                'years' => $yearData
+                'years' => $years
             ];
-        }
+        // }
     }
 
     return $this->response->setJSON([
