@@ -102,23 +102,30 @@ private function respondGroupedByCategoryAndYear(array $rows)
 
     $result = [];
 
-    foreach ($grouped as $categoryName => $years) {
-        krsort($years); // latest year first
+    // foreach ($grouped as $categoryName => $years) {
+    //     krsort($years); // latest year first
 
-        //  foreach ($years as $yearData) {
-        //     $result[] = [
-        //         'category_name' => $categoryName,
-        //         'years' => $yearData
-        //     ];
-        // }
-        // foreach ($years as $yearData) {
+    //     //  foreach ($years as $yearData) {
+    //     //     $result[] = [
+    //     //         'category_name' => $categoryName,
+    //     //         'years' => $yearData
+    //     //     ];
+    //     // }
+    //     // foreach ($years as $yearData) {
+    //         $result[] = [
+    //             'category_name' => $categoryName,
+    //             'years' => $years
+    //         ];
+    //     // }
+    // }
+        foreach ($grouped as $categoryName => $years) {
+            krsort($years); // latest year first
+
             $result[] = [
                 'category_name' => $categoryName,
-                'years' => $years
+                'years' => array_values($years) 
             ];
-        // }
-    }
-
+        }
     return $this->response->setJSON([
         'status' => true,
         'category' => 'category',
