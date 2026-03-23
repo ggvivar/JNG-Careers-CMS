@@ -6,7 +6,7 @@
     'subtitle' => 'Manage job templates',
     'featureCode' => 'jobs',
     'createUrl' => 'admin/jobs/create',
-    'createLabel' => '+ Create Job',
+    'createLabel' => 'Create Job',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search jobs...',
     'paginationLinks' => $paginationLinks ?? '',

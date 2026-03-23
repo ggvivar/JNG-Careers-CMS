@@ -74,7 +74,7 @@ class ApplicationController extends BaseController
             return redirect()->to('/admin/applications')->with('error', 'Application not found.');
         }
 
-        $statusOptions = dd_statuses_by_module('Career');
+        $statusOptions = dd_statuses_by_feature('Applications');
 
         return view('admin/applications/view', [
             'application' => $application,

@@ -6,7 +6,7 @@
     'subtitle' => 'Manage companies',
     'featureCode' => 'companies',
     'createUrl' => 'admin/companies/create',
-    'createLabel' => '+ Create Company',
+    'createLabel' => 'Create Company',
     'exportUrl' => 'admin/export/companies',
     'importUrl' => 'admin/import/companies',
     'importModalId' => 'importCompaniesModal',

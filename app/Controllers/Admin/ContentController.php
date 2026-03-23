@@ -27,7 +27,8 @@ class ContentController extends BaseController
             ->join('category cat', 'cat.id = c.category_id', 'left')
             ->join('status s', 's.id = c.status_id', 'left')
             ->where('c.date_deleted', null)
-            ->where('c.main_content_id', null);
+            ->where('c.main_content_id', null)
+            ->orWhere('c.main_content_id', 0);
 
         if ($q !== '') {
             $builder->groupStart()

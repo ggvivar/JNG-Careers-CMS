@@ -6,7 +6,7 @@
     'subtitle' => 'Manage system features per module',
     'featureCode' => 'modules',
     'createUrl' => 'admin/features/create',
-    'createLabel' => '+ Create Feature',
+    'createLabel' => 'Create Feature',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search features...',
     'paginationLinks' => $paginationLinks ?? '',

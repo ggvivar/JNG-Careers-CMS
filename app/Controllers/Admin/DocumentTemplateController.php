@@ -46,6 +46,7 @@ class DocumentTemplateController extends BaseController
         return view('admin/document_templates/index', [
             'templates'       => $templates,
             'searchQuery'     => $q,
+            'variableMap'     => $this->buildVariableMap(),
             'paginationLinks' => service('pager')->makeLinks($page, $perPage, $total),
         ]);
     }

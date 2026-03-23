@@ -50,6 +50,12 @@
     margin-bottom: 1rem;
   }
 
+  .section-divider {
+    margin: 1.25rem 0 1rem;
+    border-top: 1px solid #eef2f7;
+    padding-top: 1.25rem;
+  }
+
   .profile-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -116,6 +122,12 @@
     font-size: 1rem;
     font-weight: 600;
     color: #1f2937;
+  }
+
+  .application-meta {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 0.2rem;
   }
 
   .status-badge {
@@ -194,6 +206,43 @@
     font-size: 0.98rem;
   }
 
+  .toggle-card-header {
+    padding: 0;
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+  }
+
+  .toggle-btn {
+    width: 100%;
+    text-align: left;
+    border: 0;
+    background: transparent;
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .toggle-btn:hover {
+    background: #fafcff;
+  }
+
+  .toggle-btn:focus {
+    box-shadow: none;
+  }
+
+  .toggle-btn .toggle-icon {
+    transition: transform 0.2s ease;
+    color: #6b7280;
+  }
+
+  .toggle-btn[aria-expanded="true"] .toggle-icon {
+    transform: rotate(180deg);
+  }
+
   @media (max-width: 991px) {
     .applicant-name {
       font-size: 1.65rem;
@@ -241,46 +290,38 @@ $statusClass = function ($status) {
   <div class="row g-4">
     <div class="col-12 col-xl-7">
       <div class="applicant-card">
-        <div class="card-body">
-          <h3 class="section-title">Profile</h3>
+        <div class="toggle-card-header">
+          <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#profileSection" aria-expanded="true" aria-controls="profileSection">
+            <span>Profile</span>
+            <i class="bi bi-chevron-down toggle-icon"></i>
+          </button>
+        </div>
+        <div id="profileSection" class="collapse show">
+          <div class="card-body">
+            <div class="profile-grid">
+              <div class="profile-item">
+                <div class="profile-label">Phone</div>
+                <div class="profile-value"><?= esc($applicant['phone'] ?? '-') ?></div>
+              </div>
 
-          <div class="profile-grid">
-            <div class="profile-item">
-              <div class="profile-label">Phone</div>
-              <div class="profile-value"><?= esc($applicant['phone'] ?? '-') ?></div>
-            </div>
+              <div class="profile-item">
+                <div class="profile-label">Email</div>
+                <div class="profile-value"><?= esc($applicant['email'] ?? '-') ?></div>
+              </div>
 
-            <div class="profile-item">
-              <div class="profile-label">Email</div>
-              <div class="profile-value"><?= esc($applicant['email'] ?? '-') ?></div>
-            </div>
+              <div class="profile-item">
+                <div class="profile-label">Address</div>
+                <div class="profile-value"><?= esc($applicant['address'] ?? '-') ?></div>
+              </div>
 
-            <div class="profile-item">
-              <div class="profile-label">Address</div>
-              <div class="profile-value"><?= esc($applicant['address'] ?? '-') ?></div>
-            </div>
+              <div class="profile-item">
+                <div class="profile-label">City</div>
+                <div class="profile-value"><?= esc($applicant['city'] ?? '-') ?></div>
+              </div>
 
-            <div class="profile-item">
-              <div class="profile-label">City</div>
-              <div class="profile-value"><?= esc($applicant['city'] ?? '-') ?></div>
-            </div>
-
-            <div class="profile-item">
-              <div class="profile-label">Province</div>
-              <div class="profile-value"><?= esc($applicant['province'] ?? '-') ?></div>
-            </div>
-
-            <div class="profile-item">
-              <div class="profile-label">Resume</div>
-              <div class="profile-value">
-                <?php if (!empty($applicant['resume'])): ?>
-                  <span class="resume-chip">
-                    <i class="bi bi-file-earmark-text"></i>
-                    <?= esc($applicant['resume']) ?>
-                  </span>
-                <?php else: ?>
-                  -
-                <?php endif; ?>
+              <div class="profile-item">
+                <div class="profile-label">Province</div>
+                <div class="profile-value"><?= esc($applicant['province'] ?? '-') ?></div>
               </div>
             </div>
           </div>
@@ -290,96 +331,193 @@ $statusClass = function ($status) {
 
     <div class="col-12 col-xl-5">
       <div class="applicant-card">
-        <div class="card-body">
-          <h3 class="section-title">Applications</h3>
+        <div class="toggle-card-header">
+          <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#applicationsSection" aria-expanded="true" aria-controls="applicationsSection">
+            <span>Applications</span>
+            <i class="bi bi-chevron-down toggle-icon"></i>
+          </button>
+        </div>
+        <div id="applicationsSection" class="collapse show">
+          <div class="card-body">
+            <?php if (empty($applications)): ?>
+              <div class="empty-state">No applications yet.</div>
+            <?php else: ?>
+              <div class="application-list">
+                <?php foreach ($applications as $application): ?>
+                  <?php
+                    $statusName = $application['status_name'] ?? '-';
+                    $jobName = $application['job_name'] ?? '-';
+                    $appliedAt = $application['applied_at'] ?? null;
+                  ?>
+                  <div class="application-item">
+                    <div>
+                      <div class="application-job"><?= esc($jobName) ?></div>
+                      <div class="application-meta">
+                        Applied: <?= esc($appliedAt ?: '-') ?>
+                      </div>
+                    </div>
 
-          <?php if (empty($applications)): ?>
-            <div class="empty-state">No applications yet.</div>
-          <?php else: ?>
-            <div class="application-list">
-              <?php foreach ($applications as $application): ?>
-                <?php $statusName = $application['status_name'] ?? '-'; ?>
-                <div class="application-item">
-                  <div class="application-job">
-                    <?= esc($application['job_name'] ?? '-') ?>
+                    <span class="status-badge <?= esc($statusClass($statusName)) ?>">
+                      <?= esc($statusName) ?>
+                    </span>
                   </div>
-                  <span class="status-badge <?= esc($statusClass($statusName)) ?>">
-                    <?= esc($statusName) ?>
-                  </span>
-                </div>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="col-12">
       <div class="applicant-card">
-        <div class="card-body">
-          <h3 class="section-title">Education</h3>
+        <div class="toggle-card-header">
+          <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#personalInfoSection" aria-expanded="false" aria-controls="personalInfoSection">
+            <span>Personal Information</span>
+            <i class="bi bi-chevron-down toggle-icon"></i>
+          </button>
+        </div>
+        <div id="personalInfoSection" class="collapse">
+          <div class="card-body">
+            <div class="profile-grid">
+              <div class="profile-item">
+                <div class="profile-label">First Name</div>
+                <div class="profile-value"><?= esc($applicant['firstname'] ?? '-') ?></div>
+              </div>
 
-          <?php if (empty($educations)): ?>
-            <div class="empty-state">No education records.</div>
-          <?php else: ?>
-            <div class="table-responsive">
-              <table class="table table-modern">
-                <thead>
-                  <tr>
-                    <th>School</th>
-                    <th>Degree</th>
-                    <th>Field</th>
-                    <th>Years</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($educations as $edu): ?>
-                    <tr>
-                      <td><?= esc($edu['school_name'] ?? '-') ?></td>
-                      <td><?= esc($edu['degree'] ?? '-') ?></td>
-                      <td><?= esc($edu['field_of_study'] ?? '-') ?></td>
-                      <td><?= esc(trim(($edu['start_year'] ?? '') . ' - ' . ($edu['end_year'] ?? ''))) ?></td>
-                    </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
+              <div class="profile-item">
+                <div class="profile-label">Last Name</div>
+                <div class="profile-value"><?= esc($applicant['lastname'] ?? '-') ?></div>
+              </div>
+
+              <div class="profile-item">
+                <div class="profile-label">Full Name</div>
+                <div class="profile-value"><?= esc($fullName !== '' ? $fullName : '-') ?></div>
+              </div>
             </div>
-          <?php endif; ?>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="col-12">
       <div class="applicant-card">
-        <div class="card-body">
-          <h3 class="section-title">Job History</h3>
-
-          <?php if (empty($jobHistory)): ?>
-            <div class="empty-state">No job history records.</div>
-          <?php else: ?>
-            <div class="table-responsive">
-              <table class="table table-modern">
-                <thead>
-                  <tr>
-                    <th>Company</th>
-                    <th>Job Title</th>
-                    <th>Department</th>
-                    <th>Dates</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php foreach ($jobHistory as $job): ?>
+        <div class="toggle-card-header">
+          <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#documentsSection" aria-expanded="false" aria-controls="documentsSection">
+            <span>Document Attachments</span>
+            <i class="bi bi-chevron-down toggle-icon"></i>
+          </button>
+        </div>
+        <div id="documentsSection" class="collapse">
+          <div class="card-body">
+            <?php if (empty($applicant['resume'])): ?>
+              <div class="empty-state">No document records.</div>
+            <?php else: ?>
+              <div class="table-responsive">
+                <table class="table table-modern">
+                  <thead>
                     <tr>
-                      <td><?= esc($job['company_name'] ?? '-') ?></td>
-                      <td><?= esc($job['job_title'] ?? '-') ?></td>
-                      <td><?= esc($job['department'] ?? '-') ?></td>
-                      <td><?= esc(($job['start_date'] ?? '') . ' - ' . ($job['end_date'] ?? 'Present')) ?></td>
+                      <th>Document Name</th>
+                      <th>Attachment</th>
                     </tr>
-                  <?php endforeach; ?>
-                </tbody>
-              </table>
-            </div>
-          <?php endif; ?>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="fw-semibold">Resume</span></td>
+                      <td>
+                        <span class="resume-chip">
+                          <i class="bi bi-file-earmark-text"></i>
+                          <?= esc($applicant['resume']) ?>
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="applicant-card">
+        <div class="toggle-card-header">
+          <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#educationSection" aria-expanded="false" aria-controls="educationSection">
+            <span>Education</span>
+            <i class="bi bi-chevron-down toggle-icon"></i>
+          </button>
+        </div>
+        <div id="educationSection" class="collapse">
+          <div class="card-body">
+            <?php if (empty($educations)): ?>
+              <div class="empty-state">No education records.</div>
+            <?php else: ?>
+              <div class="table-responsive">
+                <table class="table table-modern">
+                  <thead>
+                    <tr>
+                      <th>School</th>
+                      <th>Degree</th>
+                      <th>Field</th>
+                      <th>Years</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($educations as $edu): ?>
+                      <tr>
+                        <td><?= esc($edu['school_name'] ?? '-') ?></td>
+                        <td><?= esc($edu['degree'] ?? '-') ?></td>
+                        <td><?= esc($edu['field_of_study'] ?? '-') ?></td>
+                        <td><?= esc(trim(($edu['start_year'] ?? '') . ' - ' . ($edu['end_year'] ?? ''))) ?></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="applicant-card">
+        <div class="toggle-card-header">
+          <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#jobHistorySection" aria-expanded="false" aria-controls="jobHistorySection">
+            <span>Job History</span>
+            <i class="bi bi-chevron-down toggle-icon"></i>
+          </button>
+        </div>
+        <div id="jobHistorySection" class="collapse">
+          <div class="card-body">
+            <?php if (empty($jobHistory)): ?>
+              <div class="empty-state">No job history records.</div>
+            <?php else: ?>
+              <div class="table-responsive">
+                <table class="table table-modern">
+                  <thead>
+                    <tr>
+                      <th>Company</th>
+                      <th>Job Title</th>
+                      <th>Responsibilities</th>
+                      <th>Dates</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php foreach ($jobHistory as $job): ?>
+                      <tr>
+                        <td><?= esc($job['company_name'] ?? '-') ?></td>
+                        <td><?= esc($job['job_title'] ?? '-') ?></td>
+                        <td><?= esc($job['responsibilities'] ?? '-') ?></td>
+                        <td><?= esc(($job['start_date'] ?? '') . ' - ' . ($job['end_date'] ?? 'Present')) ?></td>
+                      </tr>
+                    <?php endforeach; ?>
+                  </tbody>
+                </table>
+              </div>
+            <?php endif; ?>
+          </div>
         </div>
       </div>
     </div>

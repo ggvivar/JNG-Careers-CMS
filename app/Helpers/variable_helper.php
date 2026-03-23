@@ -4,14 +4,55 @@ if (! function_exists('template_source_tables')) {
     function template_source_tables(): array
     {
         return [
-            'applicants' => 'Applicants',
+            'applicants'       => 'Applicants',
             'job_applications' => 'Applications',
-            'job_list' => 'Job Posts',
-            'job' => 'Jobs',
-            'users' => 'Users',
-            'contents' => 'Contents',
-            'companies' => 'Companies',
-            'departments' => 'Departments',
+            'job_list'         => 'Job Posts',
+            'job'              => 'Jobs',
+            'users'            => 'Users',
+            'contents'         => 'Contents',
+            'companies'        => 'Companies',
+            'departments'      => 'Departments',
+        ];
+    }
+}
+
+if (! function_exists('template_variable_sources')) {
+    function template_variable_sources(): array
+    {
+        return [
+            'applicants' => [
+                'applicant' => 'applicants',
+            ],
+
+            'job_applications' => [
+                'application' => 'job_applications',
+                'applicant'   => 'applicants',
+                'job'         => 'job',
+            ],
+
+            'job_list' => [
+                'job' => 'job_list',
+            ],
+
+            'job' => [
+                'job' => 'job',
+            ],
+
+            'users' => [
+                'user' => 'users',
+            ],
+
+            'contents' => [
+                'content' => 'contents',
+            ],
+
+            'companies' => [
+                'company' => 'companies',
+            ],
+
+            'departments' => [
+                'department' => 'departments',
+            ],
         ];
     }
 }
@@ -25,26 +66,37 @@ if (! function_exists('template_variables_from_table')) {
         }
 
         $db = db_connect();
+        $sourceMap = template_variable_sources();
 
-        if (! $db->tableExists($table)) {
+        if (! isset($sourceMap[$table])) {
             return [];
         }
 
-        $fields = $db->getFieldNames($table);
         $vars = [];
 
-        foreach ($fields as $field) {
-            $vars[] = '{{' . $field . '}}';
-        }
+        foreach ($sourceMap[$table] as $prefix => $sourceTable) {
+            if (! $db->tableExists($sourceTable)) {
+                continue;
+            }
 
-        if ($table === 'applicants') {
-            $vars[] = '{{name}}';
+            $fields = $db->getFieldNames($sourceTable);
+
+            foreach ($fields as $field) {
+                $vars[] = '{{' . $prefix . '.' . $field . '}}';
+            }
         }
 
         if ($table === 'job_applications') {
-            $vars[] = '{{job_title}}';
-            $vars[] = '{{status}}';
-            $vars[] = '{{applied_at}}';
+            $vars[] = '{{applicant.name}}';
+            $vars[] = '{{applicant.email}}';
+            $vars[] = '{{job.name}}';
+            $vars[] = '{{application.status}}';
+            $vars[] = '{{application.created_at}}';
+        }
+
+        if ($table === 'applicants') {
+            $vars[] = '{{applicant.name}}';
+            $vars[] = '{{applicant.email}}';
         }
 
         return array_values(array_unique($vars));

@@ -6,7 +6,7 @@
     'subtitle' => 'Manage content categories',
     'featureCode' => 'categories',
     'createUrl' => 'admin/categories/create',
-    'createLabel' => '+ Create Category',
+    'createLabel' => 'Create Category',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search categories...',
     'paginationLinks' => $paginationLinks ?? '',

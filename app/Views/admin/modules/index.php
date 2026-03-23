@@ -6,7 +6,7 @@
     'subtitle' => 'Manage top-level modules',
     'featureCode' => 'modules',
     'createUrl' => 'admin/modules/create',
-    'createLabel' => '+ Create Module',
+    'createLabel' => 'Create Module',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search modules...',
     'paginationLinks' => $paginationLinks ?? '',

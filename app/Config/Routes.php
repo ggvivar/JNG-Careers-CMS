@@ -88,9 +88,15 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->post('contents/(:num)/approve', 'ContentController::approve/$1', ['filter' => 'adminfeature:contents,can_edit']);
         $routes->post('contents/(:num)/reject', 'ContentController::reject/$1', ['filter' => 'adminfeature:contents,can_edit']);
         $routes->get('contents/(:num)', 'ContentController::view/$1', ['filter' => 'adminfeature:contents,can_view']);
-        
+        //import export 
         $routes->get('export/(:segment)', 'ImportExportController::export/$1');
         $routes->post('import/(:segment)', 'ImportExportController::import/$1');
+        $routes->get('export-columns/(:segment)', 'ImportExportController::columns/$1');
+        $routes->get('export-preview/(:segment)', 'ImportExportController::exportPreview/$1');
+        $routes->post('import-preview/(:segment)', 'ImportExportController::previewImport/$1');
+        // $routes->get('export/(:segment)', 'ImportExportController::export/$1');
+        // $routes->post('import/(:segment)', 'ImportExportController::import/$1');
+        // $routes->get('export-columns/(:segment)', 'ImportExportController::columns/$1');
         //Feature 
         $routes->get('features', 'FeatureController::index', ['filter' => 'adminfeature:modules,can_view']);
         $routes->match(['get', 'post'], 'features/create', 'FeatureController::create', ['filter' => 'adminfeature:modules,can_add']);
@@ -105,7 +111,8 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->match(['get', 'post'], 'message-templates/create', 'MessageTemplateController::create', ['filter' => 'adminfeature:message-templates,can_add']);
         $routes->match(['get', 'post'], 'message-templates/edit/(:num)', 'MessageTemplateController::edit/$1', ['filter' => 'adminfeature:message-templates,can_edit']);
         $routes->post('message-templates/delete/(:num)', 'MessageTemplateController::delete/$1', ['filter' => 'adminfeature:message-templates,can_delete']);
-
+        $routes->get('admin/message-templates/preview/(:num)/(:num)', 'Admin\MessageTemplateController::preview/$1/$2');
+        
         $routes->get('document-templates', 'DocumentTemplateController::index', ['filter' => 'adminfeature:document-templates,can_view']);
         $routes->match(['get', 'post'], 'document-templates/create', 'DocumentTemplateController::create', ['filter' => 'adminfeature:document-templates,can_add']);
         $routes->match(['get', 'post'], 'document-templates/edit/(:num)', 'DocumentTemplateController::edit/$1', ['filter' => 'adminfeature:document-templates,can_edit']);

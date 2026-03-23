@@ -6,7 +6,7 @@
     'subtitle' => 'Manage CMS contents',
     'featureCode' => 'contents',
     'createUrl' => 'admin/contents/create',
-    'createLabel' => '+ Create Content',
+    'createLabel' => 'Create Content',
     'exportUrl' => 'admin/export/contents',
     'importUrl' => 'admin/import/contents',
     'importModalId' => 'importContentsModal',

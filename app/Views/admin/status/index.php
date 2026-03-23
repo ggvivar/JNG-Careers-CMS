@@ -6,7 +6,7 @@
     'subtitle' => 'Manage statuses and feature assignments',
     'featureCode' => 'status',
     'createUrl' => 'admin/status/create',
-    'createLabel' => '+ Create Status',
+    'createLabel' => 'Create Status',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search statuses...',
     'paginationLinks' => $paginationLinks ?? '',

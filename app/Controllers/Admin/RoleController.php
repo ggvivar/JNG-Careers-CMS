@@ -58,9 +58,9 @@ class RoleController extends BaseController
     public function create()
     {
         helper('dropdown');
-        $statusOptions = dd_statuses_by_feature('Role');
+        $statusOptions = dd_statuses_by_feature('Roles');
 
-        if ($this->request->getMethod() === 'post') {
+        if ($this->request->getMethod() === 'POST') {
             (new RoleModel())->insert([
                 'name' => trim((string) $this->request->getPost('name')),
                 'status_id' => $this->request->getPost('status_id') ?: null,
@@ -89,7 +89,7 @@ class RoleController extends BaseController
             return redirect()->to('/admin/roles')->with('error', 'Role not found.');
         }
 
-        if ($this->request->getMethod() === 'post') {
+        if ($this->request->getMethod() === 'POST') {
             $model->update((int) $id, [
                 'name' => trim((string) $this->request->getPost('name')),
                 'status_id' => $this->request->getPost('status_id') ?: null,
@@ -150,7 +150,7 @@ class RoleController extends BaseController
             $existing[(int) $row['module_id']] = $row;
         }
 
-        if ($this->request->getMethod() === 'post') {
+        if ($this->request->getMethod() === 'POST') {
             $enabled = $this->request->getPost('enabled') ?? [];
             $canAdd = $this->request->getPost('can_add') ?? [];
             $canEdit = $this->request->getPost('can_edit') ?? [];
@@ -213,7 +213,7 @@ class RoleController extends BaseController
         }
         
 
-        if ($this->request->getMethod() === 'post') {
+        if ($this->request->getMethod() === 'POST') {
             $userId = (int) $this->request->getPost('user_id');
 
             $db->table('users')

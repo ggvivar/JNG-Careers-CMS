@@ -6,7 +6,7 @@
     'subtitle' => 'Manage published job listings',
     'featureCode' => 'job-posts',
     'createUrl' => 'admin/job-posts/create',
-    'createLabel' => '+ Create Job Post',
+    'createLabel' => 'Create Job Post',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search job posts...',
     'paginationLinks' => $paginationLinks ?? '',

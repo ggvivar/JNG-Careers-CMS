@@ -28,7 +28,7 @@ class ApplicationSeeder extends Seeder
                 ->get()
                 ->getRowArray();
 
-            if (! $exists) {
+            // if (! $exists) {
                 $db->table('job_applications')->insert([
                     'applicant_id' => $applicant['id'],
                     'job_list_id' => $jobPost['id'],
@@ -37,7 +37,7 @@ class ApplicationSeeder extends Seeder
                     'applied_at' => $now,
                     'date_created' => $now,
                 ]);
-            }
+            // }
         }
     }
 }

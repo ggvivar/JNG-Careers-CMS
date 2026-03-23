@@ -43,16 +43,16 @@ class MessageTemplateController extends BaseController
             ->getResultArray();
 
         return view('admin/message_templates/index', [
-            'templates' => $templates,
-            'searchQuery' => $q,
-            'variableMap' => $this->buildVariableMap(),
+            'templates'       => $templates,
+            'searchQuery'     => $q,
+            'variableMap'     => $this->buildVariableMap(),
             'paginationLinks' => service('pager')->makeLinks($page, $perPage, $total),
         ]);
     }
 
     public function create()
     {
-        helper(['dropdown', 'variable']);
+        helper(['dropdown', 'variable', 'template_renderer']);
 
         $statusOptions = dd_statuses_by_feature('message-templates');
         $channelOptions = [
@@ -114,7 +114,7 @@ class MessageTemplateController extends BaseController
 
     public function edit($id)
     {
-        helper(['dropdown', 'variable']);
+        helper(['dropdown', 'variable', 'template_renderer']);
 
         $model = new MessageTemplateModel();
         $id = (int) $id;
@@ -189,6 +189,33 @@ class MessageTemplateController extends BaseController
         ]);
 
         return redirect()->to('/admin/message-templates')->with('success', 'Message template deleted.');
+    }
+
+    public function preview($templateId, $sourceId)
+    {
+        helper(['variable', 'template_renderer']);
+
+        $model = new MessageTemplateModel();
+        $template = $model->where('date_deleted', null)->find((int) $templateId);
+
+        if (! $template) {
+            return $this->response->setJSON([
+                'status'  => false,
+                'message' => 'Template not found.',
+            ]);
+        }
+
+        $data = template_data_resolver((string) ($template['source_table'] ?? ''), (int) $sourceId);
+
+        $subject = render_template((string) ($template['subject'] ?? ''), $data);
+        $body = render_template((string) ($template['body_template'] ?? ''), $data);
+
+        return $this->response->setJSON([
+            'status'  => true,
+            'subject' => $subject,
+            'body'    => $body,
+            'data'    => $data,
+        ]);
     }
 
     private function buildVariableMap(): array

@@ -6,7 +6,7 @@
     'subtitle' => 'Manage roles and permissions',
     'featureCode' => 'roles',
     'createUrl' => 'admin/roles/create',
-    'createLabel' => '+ Create Role',
+    'createLabel' => 'Create Role',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search roles...',
     'paginationLinks' => $paginationLinks ?? '',

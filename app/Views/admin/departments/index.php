@@ -6,7 +6,7 @@
     'subtitle' => 'Manage departments',
     'featureCode' => 'departments',
     'createUrl' => 'admin/departments/create',
-    'createLabel' => '+ Create Department',
+    'createLabel' => 'Create Department',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search departments...',
     'paginationLinks' => $paginationLinks ?? '',

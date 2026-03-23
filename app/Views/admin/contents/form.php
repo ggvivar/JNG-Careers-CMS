@@ -8,8 +8,8 @@ if (!empty($content['tags'])) {
     $tagsValue = is_array($decoded) ? implode(', ', $decoded) : $content['tags'];
 }
 
-$validityStart = !empty($content['validity_date_start']) ? date('Y-m-d\TH:i', strtotime($content['validity_date_start'])) : '';
-$validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strtotime($content['validity_date_end'])) : '';
+$validityStart = !empty($content['validity_date_start']) ? date('Y-m-d', strtotime($content['validity_date_start'])) : '';
+$validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d', strtotime($content['validity_date_end'])) : '';
 ?>
 
 <style>
@@ -366,12 +366,12 @@ $validityEnd   = !empty($content['validity_date_end']) ? date('Y-m-d\TH:i', strt
 
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Validity Start</label>
-                        <input type="datetime-local" class="form-control" name="validity_date_start" value="<?= esc(old('validity_date_start', $validityStart)) ?>">
+                        <input type="date" class="form-control" name="validity_date_start" value="<?= esc(old('validity_date_start', $validityStart)) ?>">
                     </div>
 
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Validity End</label>
-                        <input type="datetime-local" class="form-control" name="validity_date_end" value="<?= esc(old('validity_date_end', $validityEnd)) ?>">
+                        <input type="date" class="form-control" name="validity_date_end" value="<?= esc(old('validity_date_end', $validityEnd)) ?>">
                     </div>
                 </div>
             </div>

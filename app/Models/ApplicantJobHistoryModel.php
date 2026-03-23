@@ -24,4 +24,11 @@ class ApplicantJobHistoryModel extends Model
         'reason_for_leaving',
         'date_created',
     ];
+
+    public function getByApplicantId(int $applicantId): array
+    {
+        return $this->where('applicant_id', $applicantId)
+            ->orderBy('id', 'DESC')
+            ->findAll();
+    }
 }
