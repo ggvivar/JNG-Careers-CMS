@@ -4,6 +4,9 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\JobModel;
+use App\Models\CompanyModel;
+use App\Models\UnitModel;
+use App\Models\GroupModel;
 
 class JobController extends BaseController
 {
@@ -13,15 +16,36 @@ class JobController extends BaseController
         $q = trim((string) $this->request->getGet('q'));
 
         $builder = $db->table('job j')
-            ->select('j.id, j.name, j.description, j.requirement, j.status_id, s.name as status_name')
+            ->select('
+                j.id,
+                j.name,
+                j.job_code,
+                j.description,
+                j.requirement,
+                j.company_id,
+                j.unit_id,
+                j.group_id,
+                j.status_id,
+                c.name as company_name,
+                u.name as unit_name,
+                g.name as group_name,
+                s.name as status_name
+            ')
+            ->join('companies c', 'c.id = j.company_id', 'left')
+            ->join('units u', 'u.id = j.unit_id', 'left')
+            ->join('groups g', 'g.id = j.group_id', 'left')
             ->join('status s', 's.id = j.status_id', 'left')
             ->where('j.date_deleted', null);
 
         if ($q !== '') {
             $builder->groupStart()
                 ->like('j.name', $q)
+                ->orLike('j.job_code', $q)
                 ->orLike('j.description', $q)
                 ->orLike('j.requirement', $q)
+                ->orLike('c.name', $q)
+                ->orLike('u.name', $q)
+                ->orLike('g.name', $q)
                 ->orLike('s.name', $q)
                 ->groupEnd();
         }
@@ -49,14 +73,20 @@ class JobController extends BaseController
     public function create()
     {
         helper('dropdown');
+
         $statusOptions = dd_statuses_by_feature('jobs');
+        $companyOptions = $this->getCompanyOptions();
 
         if (strtolower($this->request->getMethod()) === 'post') {
             (new JobModel())->insert([
-                'name' => trim((string) $this->request->getPost('name')),
-                'description' => $this->request->getPost('description'),
-                'requirement' => $this->request->getPost('requirement'),
-                'status_id' => $this->request->getPost('status_id') ?: null,
+                'name'         => trim((string) $this->request->getPost('name')),
+                'job_code'     => trim((string) $this->request->getPost('job_code')),
+                'company_id'   => $this->request->getPost('company_id') ?: null,
+                'unit_id'      => $this->request->getPost('unit_id') ?: null,
+                'group_id'     => $this->request->getPost('group_id') ?: null,
+                'description'  => $this->request->getPost('description'),
+                'requirement'  => $this->request->getPost('requirement'),
+                'status_id'    => $this->request->getPost('status_id') ?: null,
                 'date_created' => date('Y-m-d H:i:s'),
             ]);
 
@@ -67,12 +97,16 @@ class JobController extends BaseController
             'mode' => 'create',
             'job' => null,
             'statusOptions' => $statusOptions,
+            'companyOptions' => $companyOptions,
+            'unitOptions' => ['' => 'Select Unit'],
+            'groupOptions' => ['' => 'Select Group'],
         ]);
     }
 
     public function edit($id)
     {
         helper('dropdown');
+
         $statusOptions = dd_statuses_by_feature('jobs');
 
         $model = new JobModel();
@@ -82,12 +116,20 @@ class JobController extends BaseController
             return redirect()->to('/admin/jobs')->with('error', 'Job not found.');
         }
 
+        $companyOptions = $this->getCompanyOptions();
+        $unitOptions = $this->getUnitOptionsByCompanyId($job['company_id'] ?? null);
+        $groupOptions = $this->getGroupOptionsByUnitId($job['unit_id'] ?? null);
+
         if (strtolower($this->request->getMethod()) === 'post') {
             $model->update((int) $id, [
-                'name' => trim((string) $this->request->getPost('name')),
-                'description' => $this->request->getPost('description'),
-                'requirement' => $this->request->getPost('requirement'),
-                'status_id' => $this->request->getPost('status_id') ?: null,
+                'name'         => trim((string) $this->request->getPost('name')),
+                'job_code'     => trim((string) $this->request->getPost('job_code')),
+                'company_id'   => $this->request->getPost('company_id') ?: null,
+                'unit_id'      => $this->request->getPost('unit_id') ?: null,
+                'group_id'     => $this->request->getPost('group_id') ?: null,
+                'description'  => $this->request->getPost('description'),
+                'requirement'  => $this->request->getPost('requirement'),
+                'status_id'    => $this->request->getPost('status_id') ?: null,
                 'date_updated' => date('Y-m-d H:i:s'),
             ]);
 
@@ -98,6 +140,9 @@ class JobController extends BaseController
             'mode' => 'edit',
             'job' => $job,
             'statusOptions' => $statusOptions,
+            'companyOptions' => $companyOptions,
+            'unitOptions' => $unitOptions,
+            'groupOptions' => $groupOptions,
         ]);
     }
 
@@ -108,5 +153,108 @@ class JobController extends BaseController
         ]);
 
         return redirect()->to('/admin/jobs')->with('success', 'Job deleted.');
+    }
+
+    public function getUnitsByCompany()
+    {
+        $companyId = (int) ($this->request->getGet('company_id') ?? 0);
+
+        $rows = (new UnitModel())
+            ->where('company_id', $companyId)
+            ->where('date_deleted', null)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $units = [];
+        foreach ($rows as $row) {
+            $units[] = [
+                'value' => $row['id'],
+                'label' => $row['name'],
+            ];
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'units' => $units,
+        ]);
+    }
+
+    public function getGroupsByUnit()
+    {
+        $unitId = (int) ($this->request->getGet('unit_id') ?? 0);
+
+        $rows = (new GroupModel())
+            ->where('unit_id', $unitId)
+            ->where('date_deleted', null)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $groups = [];
+        foreach ($rows as $row) {
+            $groups[] = [
+                'value' => $row['id'],
+                'label' => $row['name'],
+            ];
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'groups' => $groups,
+        ]);
+    }
+
+    private function getCompanyOptions(): array
+    {
+        $rows = (new CompanyModel())
+            ->where('date_deleted', null)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $options = ['' => 'Select Company'];
+        foreach ($rows as $row) {
+            $options[$row['id']] = $row['name'];
+        }
+
+        return $options;
+    }
+
+    private function getUnitOptionsByCompanyId($companyId): array
+    {
+        if (empty($companyId)) {
+            return ['' => 'Select Unit'];
+        }
+
+        $rows = (new UnitModel())
+            ->where('company_id', $companyId)
+            ->where('date_deleted', null)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $options = ['' => 'Select Unit'];
+        foreach ($rows as $row) {
+            $options[$row['id']] = $row['name'];
+        }
+
+        return $options;
+    }
+
+    private function getGroupOptionsByUnitId($unitId): array
+    {
+        if (empty($unitId)) {
+            return ['' => 'Select Group'];
+        }
+
+        $rows = (new GroupModel())
+            ->where('unit_id', $unitId)
+            ->where('date_deleted', null)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $options = ['' => 'Select Group'];
+        foreach ($rows as $row) {
+            $options[$row['id']] = $row['name'];
+        }
+
+        return $options;
     }
 }

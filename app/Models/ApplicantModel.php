@@ -11,6 +11,8 @@ class ApplicantModel extends Model
     protected $returnType = 'array';
 
     protected $allowedFields = [
+        'username',
+        'password',
         'firstname',
         'middlename',
         'lastname',
@@ -25,6 +27,7 @@ class ApplicantModel extends Model
         'city',
         'province',
         'zip_code',
+        'cover_letter',
         'date_applied',
         'date_created',
         'date_updated',

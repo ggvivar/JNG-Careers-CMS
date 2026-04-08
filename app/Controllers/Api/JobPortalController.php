@@ -35,7 +35,6 @@ class JobPortalController extends BaseController
             ->where('jl.date_deleted', null)
             ->groupStart()
                 ->where('s.name', 'Active')
-                ->orWhere('s.name', 'Published')
             ->groupEnd();
 
         if ($q !== '') {

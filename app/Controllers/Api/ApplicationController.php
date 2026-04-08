@@ -4,7 +4,7 @@ namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
 use App\Libraries\ApplicantMailer;
-use App\Models\ApplicantNotificationModel;
+use App\Controllers\Api\NotificationApiController;
 use App\Models\JobApplicationModel;
 
 class ApplicationController extends BaseController
@@ -72,94 +72,200 @@ class ApplicationController extends BaseController
             'data' => $row,
         ]);
     }
+public function create()
+{
+    helper('dropdown');
 
-    public function create()
-    {
-        helper('dropdown');
+    $applicant = service('request')->applicant;
+    $applicantId = (int) $applicant['id'];
 
-        $applicant = service('request')->applicant;
-        $applicantId = (int) $applicant['id'];
+    $data = $this->request->getJSON(true);
 
-        $jobListId = (int) ($this->request->getPost('job_list_id') ?? 0);
-        $source = trim((string) $this->request->getPost('source')) ?: 'API';
+    $jobListId = (int) ($data['job_list_id'] ?? 0);
+    $source = trim((string) ($data['source'] ?? 'API'));
 
-        if ($jobListId <= 0) {
-            return $this->response->setStatusCode(422)->setJSON([
-                'status' => false,
-                'message' => 'job_list_id is required.',
-            ]);
-        }
-
-        $db = db_connect();
-
-        $jobPost = $db->table('job_list')
-            ->where('id', $jobListId)
-            ->where('date_deleted', null)
-            ->get()
-            ->getRowArray();
-
-        if (! $jobPost) {
-            return $this->response->setStatusCode(404)->setJSON([
-                'status' => false,
-                'message' => 'Job post not found.',
-            ]);
-        }
-
-        $exists = $db->table('job_applications')
-            ->where('applicant_id', $applicantId)
-            ->where('job_list_id', $jobListId)
-            ->where('date_deleted', null)
-            ->get()
-            ->getRowArray();
-
-        if ($exists) {
-            return $this->response->setStatusCode(409)->setJSON([
-                'status' => false,
-                'message' => 'You already applied for this job.',
-            ]);
-        }
-
-        $appliedStatusId = dd_status_id('Applied', 'applications');
-
-        $model = new JobApplicationModel();
-        $model->insert([
-            'applicant_id' => $applicantId,
-            'job_list_id' => $jobListId,
-            'status_id' => $appliedStatusId,
-            'source' => $source,
-            'applied_at' => date('Y-m-d H:i:s'),
-            'date_created' => date('Y-m-d H:i:s'),
-        ]);
-
-        $job = $db->table('job_list jl')
-            ->select('j.name as job_name')
-            ->join('job j', 'j.id = jl.job_id', 'left')
-            ->where('jl.id', $jobListId)
-            ->get()
-            ->getRowArray();
-
-        (new ApplicantNotificationModel())->insert([
-            'applicant_id' => $applicantId,
-            'title' => 'Application Submitted',
-            'message' => 'Your application for ' . ($job['job_name'] ?? 'the selected job') . ' has been received.',
-            'type' => 'success',
-            'created_at' => date('Y-m-d H:i:s'),
-        ]);
-
-        (new ApplicantMailer())->applicationSubmitted(
-            $applicant['email'],
-            trim(($applicant['firstname'] ?? '') . ' ' . ($applicant['lastname'] ?? '')),
-            $job['job_name'] ?? 'the selected job'
-        );
-
-        return $this->response->setJSON([
-            'status' => true,
-            'message' => 'Application created successfully.',
-            'data' => [
-                'id' => $model->getInsertID(),
-            ],
+    if ($jobListId <= 0) {
+        return $this->response->setStatusCode(422)->setJSON([
+            'status' => false,
+            'message' => 'job_list_id is required.',
         ]);
     }
+
+    $db = db_connect();
+
+    // Check if job exists
+    $jobPost = $db->table('job_list')
+        ->where('id', $jobListId)
+        ->where('date_deleted', null)
+        ->get()
+        ->getRowArray();
+
+    if (! $jobPost) {
+        return $this->response->setStatusCode(404)->setJSON([
+            'status' => false,
+            'message' => 'Job post not found.',
+        ]);
+    }
+
+    // Check if applicant already applied
+    $exists = $db->table('job_applications')
+        ->where('applicant_id', $applicantId)
+        ->where('job_list_id', $jobListId)
+        ->where('status_id <>',6)
+        ->where('date_deleted', null)
+        ->get()
+        ->getRowArray();
+
+    // if ($exists) {
+    //     return $this->response->setStatusCode(409)->setJSON([
+    //         'status' => false,
+    //         'message' => 'You already applied for this job.',
+    //     ]);
+    // }
+
+    $appliedStatusId = dd_status_id('Applied', 'applications');
+
+    $model = new JobApplicationModel();
+    $model->insert([
+        'applicant_id' => $applicantId,
+        'job_list_id' => $jobListId,
+        'status_id' => $appliedStatusId,
+        'source' => $source,
+        'applied_at' => date('Y-m-d H:i:s'),
+        'date_created' => date('Y-m-d H:i:s'),
+    ]);
+
+    $job = $db->table('job_list jl')
+        ->select('j.name as job_name')
+        ->join('job j', 'j.id = jl.job_id', 'left')
+        ->where('jl.id', $jobListId)
+        ->get()
+        ->getRowArray();
+
+
+    // db_connect()->table('applicant_notifications')->insert([
+    //     'applicant_id' => $applicantId,
+    //     'title' => 'Application Submitted',
+    //     'message' => 'Your application for ' . ($job['job_name'] ?? 'the selected job') . ' has been received.',
+    //     'type' => 'success',
+    //     'created_at' => date('Y-m-d H:i:s'),
+    // ]);
+
+    // --- Send email notification ---
+    // NotificationApiController::send(
+    //    "vivar.gari@gmail.com", 
+    //     [
+    //         'template'   => 'app_notif_v1', // your email template key
+    //         'firstname'  => $applicant['firstname'] ?? '',
+    //         'lastname'   => $applicant['lastname'] ?? '',
+    //         'job_name'   => $job['job_name'] ?? 'the selected job',
+    //         'message'    => 'Your application has been received.',
+    //     ]
+    // );
+
+    return $this->response->setJSON([
+        'status' => true,
+        'message' => 'Application created successfully.',
+        'data' => [
+            'id' => $model->getInsertID(),
+        ],
+    ]);
+}
+    // public function create()
+    // {
+    //     helper('dropdown');
+
+    //     $applicant = service('request')->applicant;
+    //     $applicantId = (int) $applicant['id'];
+
+    //     $data = $this->request->getJSON(true);
+
+    //     $jobListId = (int) ($data['job_list_id'] ?? 0);
+    //     $source = trim((string) ($data['source'] ?? 'API'));
+
+    //     if ($jobListId <= 0) {
+    //         return $this->response->setStatusCode(422)->setJSON([
+    //             'status' => false,
+    //             'message' => 'job_list_id is required.',
+    //         ]);
+    //     }
+
+    //     $db = db_connect();
+
+    //     $jobPost = $db->table('job_list')
+    //         ->where('id', $jobListId)
+    //         ->where('date_deleted', null)
+    //         ->get()
+    //         ->getRowArray();
+
+    //     if (! $jobPost) {
+    //         return $this->response->setStatusCode(404)->setJSON([
+    //             'status' => false,
+    //             'message' => 'Job post not found.',
+    //         ]);
+    //     }
+
+    //     $exists = $db->table('job_applications')
+    //         ->where('applicant_id', $applicantId)
+    //         ->where('job_list_id', $jobListId)
+    //         ->where('date_deleted', null)
+    //         ->get()
+    //         ->getRowArray();
+
+    //     if ($exists) {
+    //         return $this->response->setStatusCode(409)->setJSON([
+    //             'status' => false,
+    //             'message' => 'You already applied for this job.',
+    //         ]);
+    //     }
+
+    //     $appliedStatusId = dd_status_id('Applied', 'applications');
+
+    //     $model = new JobApplicationModel();
+    //     $model->insert([
+    //         'applicant_id' => $applicantId,
+    //         'job_list_id' => $jobListId,
+    //         'status_id' => $appliedStatusId,
+    //         'source' => $source,
+    //         'applied_at' => date('Y-m-d H:i:s'),
+    //         'date_created' => date('Y-m-d H:i:s'),
+    //     ]);
+
+    //     $job = $db->table('job_list jl')
+    //         ->select('j.name as job_name')
+    //         ->join('job j', 'j.id = jl.job_id', 'left')
+    //         ->where('jl.id', $jobListId)
+    //         ->get()
+    //         ->getRowArray();
+
+    //     NotificationApiController::send(
+    //         $applicant['email'], 
+    //         [
+    //             'template' => 'app_notif_v1', // your email template key
+    //             'firstname' => $applicant['firstname'] ?? '',
+    //             'lastname' => $applicant['lastname'] ?? '',
+    //             'job_name' => $job['job_name'] ?? 'the selected job',
+    //             'message' => 'Your application has been received.',
+    //         ]
+    //     );
+
+    //     // Save in database as well
+    //     db_connect()->table('applicant_notifications')->insert([
+    //         'applicant_id' => $applicantId,
+    //         'title' => 'Application Submitted',
+    //         'message' => 'Your application for ' . ($job['job_name'] ?? 'the selected job') . ' has been received.',
+    //         'type' => 'success',
+    //         'created_at' => date('Y-m-d H:i:s'),
+    //     ]);
+
+    //     return $this->response->setJSON([
+    //         'status' => true,
+    //         'message' => 'Application created successfully.',
+    //         'data' => [
+    //             'id' => $model->getInsertID(),
+    //         ],
+    //     ]);
+    // }
 
     public function edit($id)
     {

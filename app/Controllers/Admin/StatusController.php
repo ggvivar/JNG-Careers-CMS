@@ -9,48 +9,63 @@ use App\Models\StatusFeatureModel;
 class StatusController extends BaseController
 {
     public function index()
-    {
-        $db = db_connect();
-        $q = trim((string) $this->request->getGet('q'));
+{
+    $db = db_connect();
+    $q = trim((string) $this->request->getGet('q'));
 
-        $builder = $db->table('status s')
-            ->select("
-                s.id,
-                s.name,
-                GROUP_CONCAT(CONCAT(m.name, ' / ', f.name) ORDER BY m.name, f.sort_order SEPARATOR ', ') as feature_names
-            ")
-            ->join('status_features sf', 'sf.status_id = s.id', 'left')
-            ->join('features f', 'f.id = sf.feature_id', 'left')
-            ->join('modules m', 'm.id = f.module_id', 'left')
-            ->where('s.date_deleted', null)
-            ->groupBy('s.id');
+    $perPage = 10;
+    $page = max(1, (int) ($this->request->getGet('page') ?? 1));
+    $offset = ($page - 1) * $perPage;
 
-        if ($q !== '') {
-            $builder->groupStart()
-                ->like('s.name', $q)
-                ->orLike('f.name', $q)
-                ->orLike('m.name', $q)
-                ->groupEnd();
-        }
+    $builder = $db->table('status s')
+        ->select("
+            s.id,
+            s.name,
+            GROUP_CONCAT(CONCAT(m.name, ' / ', f.name) ORDER BY m.name, f.sort_order SEPARATOR ', ') as feature_names
+        ")
+        ->join('status_features sf', 'sf.status_id = s.id', 'left')
+        ->join('features f', 'f.id = sf.feature_id', 'left')
+        ->join('modules m', 'm.id = f.module_id', 'left')
+        ->where('s.date_deleted', null);
 
-        $perPage = 10;
-        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
-        $offset = ($page - 1) * $perPage;
-
-        $countBuilder = clone $builder;
-        $total = count($countBuilder->get()->getResultArray());
-        $statuses = $builder
-            ->orderBy('s.id', 'DESC')
-            ->limit($perPage, $offset)
-            ->get()
-            ->getResultArray();
-          
-        return view('admin/status/index', [
-            'statuses' => $statuses,
-            'searchQuery' => $q,
-            'paginationLinks' => service('pager')->makeLinks($page, $perPage, $total),
-        ]);
+    if ($q !== '') {
+        $builder->groupStart()
+            ->like('s.name', $q)
+            ->orLike('f.name', $q)
+            ->orLike('m.name', $q)
+            ->groupEnd();
     }
+
+    $statuses = $builder
+        ->groupBy('s.id')
+        ->orderBy('s.id', 'DESC')
+        ->limit($perPage, $offset)
+        ->get()
+        ->getResultArray();
+
+    $countBuilder = $db->table('status s')
+        ->select('COUNT(DISTINCT s.id) as total', false)
+        ->join('status_features sf', 'sf.status_id = s.id', 'left')
+        ->join('features f', 'f.id = sf.feature_id', 'left')
+        ->join('modules m', 'm.id = f.module_id', 'left')
+        ->where('s.date_deleted', null);
+
+    if ($q !== '') {
+        $countBuilder->groupStart()
+            ->like('s.name', $q)
+            ->orLike('f.name', $q)
+            ->orLike('m.name', $q)
+            ->groupEnd();
+    }
+
+    $total = (int) (($countBuilder->get()->getRowArray()['total'] ?? 0));
+    return view('admin/status/index', [
+        'statuses'        => $statuses,
+        'rows'            => $statuses,
+        'searchQuery'     => $q,
+        'paginationLinks' => service('pager')->makeLinks($page, $perPage, $total, 'default_full'),
+    ]);
+}
 
     public function create()
     {

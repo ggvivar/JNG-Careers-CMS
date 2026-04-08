@@ -1,0 +1,75 @@
+<?= $this->extend('admin/partials/layout') ?>
+<?= $this->section('content') ?>
+
+<div class="mb-3">
+    <form method="get" class="row g-2">
+        <div class="col-12 col-md-4">
+            <input
+                type="text"
+                name="q"
+                value="<?= esc($searchQuery ?? '') ?>"
+                class="form-control"
+                placeholder="Search default values..."
+            >
+        </div>
+
+        <div class="col-12 col-md-3">
+            <select name="group" class="form-select">
+                <?php foreach (($groupOptions ?? []) as $value => $label): ?>
+                    <option value="<?= esc($value) ?>" <?= ($currentGroup ?? '') == $value ? 'selected' : '' ?>>
+                        <?= esc($label) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="<?= site_url('admin/common-defaults') ?>" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+<?= view('admin/partials/table_template', [
+    'title' => 'Common Defaults',
+    'subtitle' => 'Manage reusable default values',
+    'featureCode' => 'common-defaults',
+    'createUrl' => 'admin/common-defaults/create',
+    'createLabel' => 'Create Default Value',
+    'searchQuery' => $searchQuery ?? '',
+    'searchPlaceholder' => 'Search common defaults...',
+    'paginationLinks' => $paginationLinks ?? '',
+    'rows' => $defaults ?? [],
+    'columns' => [
+        ['key' => 'id', 'label' => 'ID'],
+        [
+            'key' => 'key1',
+            'label' => 'Group',
+            'formatter' => fn($row, $value) => '<span class="fw-semibold">' . esc($value) . '</span>'
+        ],
+        ['key' => 'value', 'label' => 'Value'],
+        ['key' => 'key2', 'label' => 'Key 2'],
+        ['key' => 'key3', 'label' => 'Key 3'],
+        ['key' => 'key4', 'label' => 'Key 4'],
+        ['key' => 'key5', 'label' => 'Key 5'],
+        ['key' => 'definition', 'label' => 'Definition'],
+    ],
+    'actions' => [
+    [
+        'label' => 'Edit',
+        'icon' => 'bi-pencil',
+        'url' => 'admin/common-defaults/edit/',
+        'class' => 'btn btn-outline-primary',
+    ],
+    [
+        'label' => 'Delete',
+        'icon' => 'bi-trash',
+        'url' => 'admin/common-defaults/delete/',
+        'class' => 'btn btn-outline-danger',
+        'method' => 'post',
+        'confirm' => 'Delete this default value?',
+    ],
+],
+]) ?>
+
+<?= $this->endSection() ?>

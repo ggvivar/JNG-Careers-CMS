@@ -11,18 +11,28 @@ use App\Models\ApplicantTokenModel;
 class ApplicantController extends BaseController
 {
     public function register()
-    {
+{
         $model = new ApplicantModel();
 
-        $firstname = trim((string) $this->request->getPost('firstname'));
-        $lastname  = trim((string) $this->request->getPost('lastname'));
-        $email     = trim((string) $this->request->getPost('email'));
-        $password  = (string) $this->request->getPost('password');
+        $data = $this->request->getJSON(true);
+        // return($data);
+
+        $firstname = trim((string) ($data['firstname'] ?? ''));
+        $lastname  = trim((string) ($data['lastname'] ?? ''));
+        $email     = trim((string) ($data['email'] ?? ''));
+        $password  = (string) ($data['password'] ?? '');
 
         if ($firstname === '' || $lastname === '' || $email === '' || $password === '') {
             return $this->response->setStatusCode(422)->setJSON([
                 'status' => false,
                 'message' => 'Firstname, lastname, email, and password are required.',
+            ]);
+        }
+
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => false,
+                'message' => 'Invalid email format.',
             ]);
         }
 
@@ -50,20 +60,9 @@ class ApplicantController extends BaseController
             'username'     => $username,
             'password'     => password_hash($password, PASSWORD_DEFAULT),
             'firstname'    => $firstname,
-            'middlename'   => trim((string) $this->request->getPost('middlename')) ?: null,
+            'middlename'   => trim((string) ($data['middlename'] ?? '')) ?: null,
             'lastname'     => $lastname,
-            'suffix'       => trim((string) $this->request->getPost('suffix')) ?: null,
             'email'        => $email,
-            'phone'        => trim((string) $this->request->getPost('phone')) ?: null,
-            'birthdate'    => $this->request->getPost('birthdate') ?: null,
-            'gender'       => trim((string) $this->request->getPost('gender')) ?: null,
-            'civil_status' => trim((string) $this->request->getPost('civil_status')) ?: null,
-            'nationality'  => trim((string) $this->request->getPost('nationality')) ?: null,
-            'address'      => trim((string) $this->request->getPost('address')) ?: null,
-            'city'         => trim((string) $this->request->getPost('city')) ?: null,
-            'province'     => trim((string) $this->request->getPost('province')) ?: null,
-            'zip_code'     => trim((string) $this->request->getPost('zip_code')) ?: null,
-            'cover_letter' => $this->request->getPost('cover_letter') ?: null,
             'date_created' => date('Y-m-d H:i:s'),
         ]);
 
@@ -75,21 +74,33 @@ class ApplicantController extends BaseController
 
     public function login()
     {
-        $email = trim((string) $this->request->getPost('email'));
-        $password = (string) $this->request->getPost('password');
-        $device = trim((string) $this->request->getPost('device_name')) ?: 'unknown device';
+        $data = $this->request->getJSON(true);
+        // return $data;
+        $email = trim((string) ($data['email'] ?? ''));
+        $password = (string) ($data['password'] ?? '');
+        
+        $device = trim((string) ($data['device_name'] ?? 'unknown device'));
+
+        if ($email === '' || $password === '') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => false,
+                'message' => 'Email and password are required.',
+            ]);
+        }
 
         $db = db_connect();
         $applicant = $db->table('applicants')
             ->where('email', $email)
+            // ->where('password',password_hash($password, PASSWORD_DEFAULT))
             ->where('date_deleted', null)
             ->get()
             ->getRowArray();
+        
 
-        if (! $applicant || ! password_verify($password, $applicant['password'])) {
+       if (! $applicant || ! password_verify($password, $applicant['password'])) {
             return $this->response->setStatusCode(401)->setJSON([
                 'status' => false,
-                'message' => 'Invalid credentials.',
+                'message' => 'Invalid credentials'.$password
             ]);
         }
 
@@ -99,24 +110,14 @@ class ApplicantController extends BaseController
             'applicant_id' => $applicant['id'],
             'token' => $token,
             'device_name' => $device,
-            'ip_address' => $this->request->getIPAddress(),
-            'user_agent' => $this->request->getUserAgent()->getAgentString(),
             'expires_at' => date('Y-m-d H:i:s', strtotime('+7 days')),
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
         return $this->response->setJSON([
             'status' => true,
-            'message' => 'Login successful.',
             'data' => [
                 'token' => $token,
-                'applicant' => [
-                    'id' => $applicant['id'],
-                    'username' => $applicant['username'],
-                    'firstname' => $applicant['firstname'],
-                    'lastname' => $applicant['lastname'],
-                    'email' => $applicant['email'],
-                ],
             ],
         ]);
     }
@@ -139,17 +140,37 @@ class ApplicantController extends BaseController
         ]);
     }
 
-    public function me()
-    {
-        $applicant = service('request')->applicant;
-        unset($applicant['password']);
+    // public function me()
+    // {
+    //     $applicant = service('request')->applicant;
+    //     unset($applicant['password']);
 
-        return $this->response->setJSON([
-            'status' => true,
-            'data' => $applicant,
-        ]);
-    }
+    //     return $this->response->setJSON([
+    //         'status' => true,
+    //         'data' => $applicant,
+    //     ]);
+    // }
+public function me()
+{
+    $applicant = service('request')->applicant;
+    $applicantId = (int) $applicant['id'];
 
+    // remove password
+    unset($applicant['password']);
+
+    // load models
+    $educationModel = new \App\Models\ApplicantEducationModel();
+    $jobModel = new \App\Models\ApplicantJobHistoryModel();
+
+    return $this->response->setJSON([
+        'status' => true,
+        'data' => [
+            'profile' => $applicant,
+            'education' => $educationModel->getByApplicantId($applicantId),
+            'job_history' => $jobModel->getByApplicantId($applicantId),
+        ],
+    ]);
+}
     public function edit()
     {
         $applicant = service('request')->applicant;
@@ -388,4 +409,70 @@ class ApplicantController extends BaseController
             'message' => 'Password reset successful.',
         ]);
     }
+      //added for saving education and documents
+    public function saveEducation()
+{
+    $applicant = service('request')->applicant;
+    $applicantId = (int) $applicant['id'];
+
+    $data = $this->request->getJSON(true);
+
+    if (empty($data['school_name']) || empty($data['degree'])) {
+        return $this->response->setStatusCode(422)->setJSON([
+            'status' => false,
+            'message' => 'School name and degree are required.',
+        ]);
+    }
+
+    $model = new ApplicantEducationModel();
+
+    // If id is provided, update; else insert
+    if (!empty($data['id'])) {
+        $model->update($data['id'], array_merge($data, ['applicant_id' => $applicantId]));
+    } else {
+        $model->insert(array_merge($data, ['applicant_id' => $applicantId, 'date_created' => date('Y-m-d H:i:s')]));
+    }
+
+    // Return updated list
+    $education = $model->getByApplicantId($applicantId);
+
+    return $this->response->setJSON([
+        'status' => true,
+        'data' => $education,
+        'message' => 'Education saved successfully.',
+    ]);
+}
+
+public function saveJobHistory()
+{
+    $applicant = service('request')->applicant;
+    $applicantId = (int) $applicant['id'];
+
+    $data = $this->request->getJSON(true);
+
+    if (empty($data['company_name']) || empty($data['job_title'])) {
+        return $this->response->setStatusCode(422)->setJSON([
+            'status' => false,
+            'message' => 'Company name and job title are required.',
+        ]);
+    }
+
+    $model = ApplicantJobHistoryModel();
+
+    // If id is provided, update; else insert
+    if (!empty($data['id'])) {
+        $model->update($data['id'], array_merge($data, ['applicant_id' => $applicantId]));
+    } else {
+        $model->insert(array_merge($data, ['applicant_id' => $applicantId, 'date_created' => date('Y-m-d H:i:s')]));
+    }
+
+    // Return updated list
+    $jobHistory = $model->getByApplicantId($applicantId);
+
+    return $this->response->setJSON([
+        'status' => true,
+        'data' => $jobHistory,
+        'message' => 'Job history saved successfully.',
+    ]);
+}
 }

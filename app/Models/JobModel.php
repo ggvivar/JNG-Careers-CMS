@@ -13,6 +13,9 @@ class JobModel extends Model
     protected $allowedFields = [
         'name',
         'job_code',
+        'company_id',
+        'unit_id',
+        'group_id',
         'description',
         'requirement',
         'status_id',

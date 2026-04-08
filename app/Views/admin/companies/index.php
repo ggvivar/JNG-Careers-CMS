@@ -10,7 +10,7 @@
     'exportUrl' => 'admin/export/companies',
     'importUrl' => 'admin/import/companies',
     'importModalId' => 'importCompaniesModal',
-    'importHelp' => 'Columns: name,code,address,contact_no,email,status_name',
+    'exportModalId' => 'exportCompaniesModal',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search companies...',
     'paginationLinks' => $paginationLinks ?? '',
@@ -21,6 +21,8 @@
         ['key' => 'code', 'label' => 'Code'],
         ['key' => 'contact_no', 'label' => 'Contact'],
         ['key' => 'email', 'label' => 'Email'],
+        ['key' => 'unit_count', 'label' => 'Units'],
+        ['key' => 'group_count', 'label' => 'Groups'],
         ['key' => 'status_name', 'label' => 'Status'],
     ],
     'actions' => [

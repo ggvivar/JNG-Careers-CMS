@@ -24,14 +24,16 @@ if (! function_exists('menu_icon')) {
                 str_contains($code, 'role')       => 'bi-person-gear',
                 str_contains($code, 'permission') => 'bi-shield-lock',
                 str_contains($code, 'setting')    => 'bi-sliders',
+                str_contains($code, 'default')    => 'bi-ui-checks-grid',
                 default                           => 'bi-gear',
             },
 
             'Career' => match (true) {
-                str_contains($code, 'job')       => 'bi-briefcase',
-                str_contains($code, 'applicant') => 'bi-person-lines-fill',
-                str_contains($code, 'resume')    => 'bi-file-earmark-person',
-                default                          => 'bi-briefcase',
+                str_contains($code, 'job')        => 'bi-briefcase',
+                str_contains($code, 'applicant')  => 'bi-person-lines-fill',
+                str_contains($code, 'resume')     => 'bi-file-earmark-person',
+                str_contains($code, 'processing') => 'bi-person-workspace',
+                default                           => 'bi-briefcase',
             },
 
             'CMS' => match (true) {
@@ -55,6 +57,11 @@ if (! function_exists('module_has_active_feature')) {
                 return true;
             }
         }
+
+        if (admin_is_active('admin/applications/assigned-to-me', $path) === 'active') {
+            return true;
+        }
+
         return false;
     }
 }
@@ -86,7 +93,6 @@ body{
     font-family:'Segoe UI', sans-serif;
 }
 
-/* NAVBAR */
 .navbar{
     height:52px;
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
@@ -97,7 +103,6 @@ body{
     white-space:nowrap;
 }
 
-/* SIDEBAR */
 .sidebar{
     min-height:calc(100vh - 52px);
     background:#fff;
@@ -193,7 +198,6 @@ body{
     transform:rotate(180deg);
 }
 
-/* SECTION BODY */
 .submenu{
     background:#fff;
 }
@@ -203,12 +207,10 @@ body{
     font-size:13px;
 }
 
-/* CONTENT */
 .content-wrap{
     padding:22px;
 }
 
-/* DASHBOARD CARDS */
 .dashboard-card{
     border:none;
     border-radius:12px;
@@ -228,7 +230,6 @@ body{
     color:#0d6efd;
 }
 
-/* BUTTONS */
 .btn{
     font-size:13px;
     padding:5px 10px;
@@ -239,7 +240,6 @@ body{
     padding:3px 8px;
 }
 
-/* TABLES */
 .table{
     background:#fff;
     border-radius:10px;
@@ -255,7 +255,124 @@ body{
     vertical-align:middle;
 }
 
-/* MOBILE */
+
+#toast-container {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    width: 350px;
+    max-width: calc(100vw - 40px);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 🔥 STACK ANIMATION */
+.app-toast {
+    width: 100%;
+    opacity: 0;
+    transform: translateY(-12px) scale(.98);
+    transition:
+        opacity .28s ease,
+        transform .28s ease,
+        max-height .28s ease,
+        margin .28s ease,
+        padding .28s ease;
+    border-radius: 12px;
+    max-height: 220px;
+    overflow: hidden;
+    will-change: transform, opacity;
+}
+
+.app-toast.show {
+    opacity: 1;
+}
+
+.app-toast.removing {
+    opacity: 0;
+    transform: translateY(-8px) scale(.96);
+    max-height: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+}
+
+.app-toast .toast-body-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.app-toast .toast-text {
+    flex: 1;
+    min-width: 0;
+    padding-top: 2px;
+}
+
+.app-toast .toast-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.app-toast .toast-progress {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.app-toast .toast-progress svg {
+    width: 26px;
+    height: 26px;
+    display: block;
+    transform: rotate(-90deg);
+}
+
+.app-toast .toast-progress .track {
+    fill: none;
+    stroke: rgba(0,0,0,.12);
+    stroke-width: 3;
+}
+
+.app-toast .toast-progress .bar {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 69.12;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset .1s linear;
+}
+
+.app-toast .toast-progress .time-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    color: currentColor;
+    pointer-events: none;
+}
+
+.app-toast.alert-success .toast-progress,
+.app-toast.alert-success .time-label { color: #198754; }
+
+.app-toast.alert-danger .toast-progress,
+.app-toast.alert-danger .time-label { color: #dc3545; }
+
+.app-toast.alert-warning .toast-progress,
+.app-toast.alert-warning .time-label { color: #fd7e14; }
+
+.app-toast.alert-info .toast-progress,
+.app-toast.alert-info .time-label { color: #0dcaf0; }
+
 @media (max-width:991px){
     .sidebar{
         display:none;
@@ -264,6 +381,12 @@ body{
     .navbar-brand{
         margin-left:auto;
         font-size:15px;
+    }
+
+    #toast-container {
+        right: 50%;
+        transform: translateX(50%);
+        width: min(95vw, 400px);
     }
 }
 </style>
@@ -302,7 +425,6 @@ body{
     </div>
 </nav>
 
-<!-- MOBILE SIDEBAR -->
 <div class="offcanvas offcanvas-start"
      tabindex="-1"
      id="mobileSidebar"
@@ -351,30 +473,44 @@ body{
                 </div>
             <?php endif; ?>
 
-            <?php if (! empty($careerFeatures)): ?>
-                <button class="menu-toggle <?= $careerOpen ? 'active' : '' ?>"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#mobileCareerMenu"
-                        aria-expanded="<?= $careerOpen ? 'true' : 'false' ?>"
-                        aria-controls="mobileCareerMenu">
-                    <i class="bi bi-briefcase"></i>
-                    Career
-                    <i class="bi bi-chevron-down chevron"></i>
-                </button>
+            <?php foreach ($careerFeatures as $feature): ?>
+    <?php if (($feature['code'] ?? '') === 'applications' && rbac_can_feature('applications', 'can_view')): ?>
+        <?php $applicationsOpen = admin_is_active('admin/applications', $path) === 'active' || admin_is_active('admin/applications/assigned-to-me', $path) === 'active'; ?>
 
-                <div class="collapse <?= $careerOpen ? 'show' : '' ?>" id="mobileCareerMenu">
-                    <div class="submenu">
-                        <?php foreach ($careerFeatures as $feature): ?>
-                            <a class="list-group-item <?= admin_is_active('admin/' . $feature['code'], $path) ?>"
-                               href="<?= site_url('admin/' . $feature['code']) ?>">
-                                <i class="bi <?= menu_icon('Career', $feature['code']) ?>"></i>
-                                <?= esc($feature['name']) ?>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
+        <button class="menu-toggle <?= $applicationsOpen ? 'active' : '' ?>"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mobileApplicationsSubmenu"
+                aria-expanded="<?= $applicationsOpen ? 'true' : 'false' ?>"
+                aria-controls="mobileApplicationsSubmenu">
+            <i class="bi <?= menu_icon('Career', $feature['code']) ?>"></i>
+            <?= esc($feature['name']) ?>
+            <i class="bi bi-chevron-down chevron"></i>
+        </button>
+
+        <div class="collapse <?= $applicationsOpen ? 'show' : '' ?>" id="mobileApplicationsSubmenu">
+            <div class="submenu">
+                <a class="list-group-item <?= admin_is_active('admin/applications', $path) ?>"
+                   href="<?= site_url('admin/applications') ?>">
+                    <i class="bi bi-list-ul"></i>
+                    All Applications
+                </a>
+
+                <a class="list-group-item <?= admin_is_active('admin/applications/assigned-to-me', $path) ?>"
+                   href="<?= site_url('admin/applications/assigned-to-me') ?>">
+                    <i class="bi bi-person-workspace"></i>
+                    My Processing
+                </a>
+            </div>
+        </div>
+    <?php else: ?>
+        <a class="list-group-item <?= admin_is_active('admin/' . $feature['code'], $path) ?>"
+           href="<?= site_url('admin/' . $feature['code']) ?>">
+            <i class="bi <?= menu_icon('Career', $feature['code']) ?>"></i>
+            <?= esc($feature['name']) ?>
+        </a>
+    <?php endif; ?>
+<?php endforeach; ?>
 
             <?php if (! empty($cmsFeatures)): ?>
                 <button class="menu-toggle <?= $cmsOpen ? 'active' : '' ?>"
@@ -420,7 +556,6 @@ body{
 <div class="container-fluid">
     <div class="row">
 
-        <!-- DESKTOP SIDEBAR -->
         <aside class="col-lg-2 sidebar p-0">
             <div class="list-group list-group-flush">
 
@@ -455,30 +590,44 @@ body{
                     </div>
                 <?php endif; ?>
 
-                <?php if (! empty($careerFeatures)): ?>
-                    <button class="menu-toggle <?= $careerOpen ? 'active' : '' ?>"
-                            type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#desktopCareerMenu"
-                            aria-expanded="<?= $careerOpen ? 'true' : 'false' ?>"
-                            aria-controls="desktopCareerMenu">
-                        <i class="bi bi-briefcase"></i>
-                        Career
-                        <i class="bi bi-chevron-down chevron"></i>
-                    </button>
+                <?php foreach ($careerFeatures as $feature): ?>
+    <?php if (($feature['code'] ?? '') === 'applications' && rbac_can_feature('applications', 'can_view')): ?>
+        <?php $applicationsOpen = admin_is_active('admin/applications', $path) === 'active' || admin_is_active('admin/applications/assigned-to-me', $path) === 'active'; ?>
 
-                    <div class="collapse <?= $careerOpen ? 'show' : '' ?>" id="desktopCareerMenu">
-                        <div class="submenu">
-                            <?php foreach ($careerFeatures as $feature): ?>
-                                <a class="list-group-item <?= admin_is_active('admin/' . $feature['code'], $path) ?>"
-                                   href="<?= site_url('admin/' . $feature['code']) ?>">
-                                    <i class="bi <?= menu_icon('Career', $feature['code']) ?>"></i>
-                                    <?= esc($feature['name']) ?>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
+        <button class="menu-toggle <?= $applicationsOpen ? 'active' : '' ?>"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#desktopApplicationsSubmenu"
+                aria-expanded="<?= $applicationsOpen ? 'true' : 'false' ?>"
+                aria-controls="desktopApplicationsSubmenu">
+            <i class="bi <?= menu_icon('Career', $feature['code']) ?>"></i>
+            <?= esc($feature['name']) ?>
+            <i class="bi bi-chevron-down chevron"></i>
+        </button>
+
+        <div class="collapse <?= $applicationsOpen ? 'show' : '' ?>" id="desktopApplicationsSubmenu">
+            <div class="submenu">
+                <a class="list-group-item <?= admin_is_active('admin/applications', $path) ?>"
+                   href="<?= site_url('admin/applications') ?>">
+                    <i class="bi bi-list-ul"></i>
+                    All Applications
+                </a>
+
+                <a class="list-group-item <?= admin_is_active('admin/applications/assigned-to-me', $path) ?>"
+                   href="<?= site_url('admin/applications/assigned-to-me') ?>">
+                    <i class="bi bi-person-workspace"></i>
+                    My Processing
+                </a>
+            </div>
+        </div>
+    <?php else: ?>
+        <a class="list-group-item <?= admin_is_active('admin/' . $feature['code'], $path) ?>"
+           href="<?= site_url('admin/' . $feature['code']) ?>">
+            <i class="bi <?= menu_icon('Career', $feature['code']) ?>"></i>
+            <?= esc($feature['name']) ?>
+        </a>
+    <?php endif; ?>
+<?php endforeach; ?>
 
                 <?php if (! empty($cmsFeatures)): ?>
                     <button class="menu-toggle <?= $cmsOpen ? 'active' : '' ?>"
@@ -508,24 +657,52 @@ body{
             </div>
         </aside>
 
-        <!-- CONTENT -->
         <main class="col-lg-10 col-12 content-wrap">
 
-            <?php if (session()->getFlashdata('error')): ?>
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <?= esc(session()->getFlashdata('error')) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+            <?php if (session()->getFlashdata('success')): ?>
+            <script>
+            window.appAlerts = window.appAlerts || [];
+            window.appAlerts.push({
+                type: 'success',
+                message: <?= json_encode(session()->getFlashdata('success')) ?>
+            });
+            </script>
             <?php endif; ?>
 
-            <?php if (session()->getFlashdata('success')): ?>
-                <div class="alert alert-success alert-dismissible fade show">
-                    <?= esc(session()->getFlashdata('success')) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+            <?php if (session()->getFlashdata('error')): ?>
+            <script>
+            window.appAlerts = window.appAlerts || [];
+            window.appAlerts.push({
+                type: 'danger',
+                message: <?= json_encode(session()->getFlashdata('error')) ?>
+            });
+            </script>
             <?php endif; ?>
+
+            <?php if (session()->getFlashdata('warning')): ?>
+            <script>
+            window.appAlerts = window.appAlerts || [];
+            window.appAlerts.push({
+                type: 'warning',
+                message: <?= json_encode(session()->getFlashdata('warning')) ?>
+            });
+            </script>
+            <?php endif; ?>
+
+            <?php if (session()->getFlashdata('info')): ?>
+            <script>
+            window.appAlerts = window.appAlerts || [];
+            window.appAlerts.push({
+                type: 'info',
+                message: <?= json_encode(session()->getFlashdata('info')) ?>
+            });
+            </script>
+            <?php endif; ?>
+
+            <div id="toast-container"></div>
 
             <?= $this->renderSection('content') ?>
+            <?= $this->renderSection('scripts') ?>
 
         </main>
 
@@ -533,5 +710,147 @@ body{
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    function restackToasts() {
+        const toasts = Array.from(container.querySelectorAll('.app-toast:not(.removing)'));
+
+        toasts.forEach((toast, index) => {
+            toast.style.zIndex = String(1000 - index);
+            toast.style.transform = toast.classList.contains('show')
+                ? `translateY(${index * 4}px) scale(${1 - (index * 0.02)})`
+                : 'translateY(-12px) scale(.98)';
+        });
+    }
+
+    function removeToast(toast) {
+        if (!toast || toast.classList.contains('removing')) return;
+
+        if (toast._animationFrame) cancelAnimationFrame(toast._animationFrame);
+        if (toast._timeout) clearTimeout(toast._timeout);
+
+        toast.classList.remove('show');
+        toast.classList.add('removing');
+
+        restackToasts();
+
+        setTimeout(() => {
+            toast.remove();
+            restackToasts();
+        }, 280);
+    }
+
+    function startCircularTimer(toast, duration) {
+        const progressBar = toast.querySelector('.bar');
+        const timeLabel = toast.querySelector('.time-label');
+        if (!progressBar || !timeLabel) return;
+
+        const radius = 11;
+        const circumference = 2 * Math.PI * radius;
+        const start = performance.now();
+        let pausedElapsed = 0;
+        let pauseStartedAt = null;
+
+        progressBar.style.strokeDasharray = circumference;
+        progressBar.style.strokeDashoffset = 0;
+
+        function update(now) {
+            if (pauseStartedAt !== null) {
+                toast._animationFrame = requestAnimationFrame(update);
+                return;
+            }
+
+            const elapsed = now - start - pausedElapsed;
+            const remaining = Math.max(0, duration - elapsed);
+            const progress = remaining / duration;
+            const offset = circumference * (1 - progress);
+
+            progressBar.style.strokeDashoffset = offset;
+            timeLabel.textContent = Math.ceil(remaining / 1000);
+
+            if (remaining > 0 && !toast.classList.contains('removing')) {
+                toast._animationFrame = requestAnimationFrame(update);
+            }
+        }
+
+        toast.addEventListener('mouseenter', () => {
+            if (pauseStartedAt === null) {
+                pauseStartedAt = performance.now();
+            }
+            if (toast._timeout) {
+                clearTimeout(toast._timeout);
+                toast._timeout = null;
+            }
+        });
+
+        toast.addEventListener('mouseleave', () => {
+            if (pauseStartedAt !== null) {
+                pausedElapsed += performance.now() - pauseStartedAt;
+                pauseStartedAt = null;
+            }
+
+            const currentRemaining = Math.max(
+                0,
+                duration - ((performance.now() - start) - pausedElapsed)
+            );
+
+            toast._timeout = setTimeout(() => removeToast(toast), currentRemaining);
+        });
+
+        toast._animationFrame = requestAnimationFrame(update);
+        toast._timeout = setTimeout(() => removeToast(toast), duration);
+    }
+
+    function createToast(type, message) {
+        const toast = document.createElement('div');
+        toast.className = `app-toast alert alert-${type} alert-dismissible shadow-sm mb-0`;
+        toast.setAttribute('role', 'alert');
+
+        toast.innerHTML = `
+            <div class="toast-body-wrap">
+                <div class="toast-text pe-1">${message}</div>
+
+                <div class="toast-actions">
+                    <div class="toast-progress" aria-hidden="true">
+                        <svg viewBox="0 0 26 26">
+                            <circle class="track" cx="13" cy="13" r="11"></circle>
+                            <circle class="bar" cx="13" cy="13" r="11"></circle>
+                        </svg>
+                        <span class="time-label">5</span>
+                    </div>
+
+                    <button type="button" class="btn-close" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        const closeBtn = toast.querySelector('.btn-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => removeToast(toast));
+        }
+
+        container.prepend(toast);
+        restackToasts();
+
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+            restackToasts();
+        });
+
+        startCircularTimer(toast, 5000);
+    }
+
+    if (Array.isArray(window.appAlerts)) {
+        window.appAlerts.forEach(alert => {
+            if (alert && alert.message) {
+                createToast(alert.type || 'info', alert.message);
+            }
+        });
+    }
+});
+</script>
 </body>
 </html>

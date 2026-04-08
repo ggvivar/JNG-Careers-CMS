@@ -12,7 +12,13 @@ class JobPostController extends BaseController
         $q = trim((string) $this->request->getGet('q'));
 
         $builder = $db->table('job_list jl')
-            ->select('jl.*, j.name as job_name, s.name as status_name, c.name as company_name, d.name as department_name')
+            ->select('
+                jl.*,
+                j.name as job_name,
+                s.name as status_name,
+                c.name as company_name,
+                d.name as department_name
+            ')
             ->join('job j', 'j.id = jl.job_id', 'left')
             ->join('status s', 's.id = jl.status_id', 'left')
             ->join('companies c', 'c.id = jl.company_id', 'left')
@@ -27,6 +33,7 @@ class JobPostController extends BaseController
                 ->orLike('jl.location', $q)
                 ->orLike('jl.salary_range', $q)
                 ->orLike('jl.experience_range', $q)
+                ->orLike('jl.headcount_required', $q)
                 ->orLike('s.name', $q)
                 ->groupEnd();
         }
@@ -69,6 +76,9 @@ class JobPostController extends BaseController
                 'salary_range' => trim((string) $this->request->getPost('salary_range')) ?: null,
                 'experience_range' => trim((string) $this->request->getPost('experience_range')) ?: null,
                 'rank_hiring' => $this->request->getPost('rank_hiring') ?: null,
+                'headcount_required' => $this->request->getPost('headcount_required') !== ''
+                    ? (int) $this->request->getPost('headcount_required')
+                    : null,
                 'job_posted_date' => $this->normalizeDatetime($this->request->getPost('job_posted_date')),
                 'status_id' => $this->request->getPost('status_id') ?: null,
                 'valid_from' => $this->normalizeDatetime($this->request->getPost('valid_from')),
@@ -120,6 +130,9 @@ class JobPostController extends BaseController
                     'salary_range' => trim((string) $this->request->getPost('salary_range')) ?: null,
                     'experience_range' => trim((string) $this->request->getPost('experience_range')) ?: null,
                     'rank_hiring' => $this->request->getPost('rank_hiring') ?: null,
+                    'headcount_required' => $this->request->getPost('headcount_required') !== ''
+                        ? (int) $this->request->getPost('headcount_required')
+                        : null,
                     'job_posted_date' => $this->normalizeDatetime($this->request->getPost('job_posted_date')),
                     'status_id' => $this->request->getPost('status_id') ?: null,
                     'valid_from' => $this->normalizeDatetime($this->request->getPost('valid_from')),
@@ -160,5 +173,55 @@ class JobPostController extends BaseController
 
         $ts = strtotime($value);
         return $ts ? date('Y-m-d H:i:s', $ts) : null;
+    }
+
+    public function JobList()
+    {
+        $db = db_connect();
+        $q = trim((string) $this->request->getGet('q'));
+
+        $builder = $db->table('job_list jl')
+            ->select('
+                jl.id,
+                j.name as job_name,
+                s.name as status_name,
+                c.name as company_name,
+                d.name as department_name,
+                jl.location,
+                jl.salary_range,
+                jl.experience_range,
+                jl.headcount_required,
+                jl.valid_from,
+                jl.valid_to
+            ')
+            ->join('job j', 'j.id = jl.job_id', 'left')
+            ->join('status s', 's.id = jl.status_id', 'left')
+            ->join('companies c', 'c.id = jl.company_id', 'left')
+            ->join('departments d', 'd.id = jl.department_id', 'left')
+            ->where('jl.date_deleted', null);
+
+        if ($q !== '') {
+            $builder->groupStart()
+                ->like('j.name', $q)
+                ->orLike('c.name', $q)
+                ->orLike('d.name', $q)
+                ->orLike('jl.location', $q)
+                ->orLike('jl.salary_range', $q)
+                ->orLike('jl.experience_range', $q)
+                ->orLike('jl.headcount_required', $q)
+                ->orLike('s.name', $q)
+                ->groupEnd();
+        }
+
+        $rows = $builder
+            ->orderBy('jl.id', 'DESC')
+            ->limit(20)
+            ->get()
+            ->getResultArray();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'rows' => $rows,
+        ]);
     }
 }

@@ -30,12 +30,15 @@ class Filters extends BaseFilters
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
-        'cors'          => Cors::class,
+        // 'cors'          => Cors::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'adminauth'    => \App\Filters\AdminAuth::class,//added for rbac
         'adminfeature' => \App\Filters\AdminFeature::class,//added for rbac
+        'cors' => \App\Filters\Cors::class, //added for CORS
+        'applicantauth' => \App\Filters\ApplicantAuth::class,//added for rbac
+    
     ];
 
     /**
@@ -77,10 +80,12 @@ class Filters extends BaseFilters
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',
+            'cors',
         ],
         'after' => [
             // 'honeypot',
             // 'secureheaders',
+            'cors',
         ],
     ];
 

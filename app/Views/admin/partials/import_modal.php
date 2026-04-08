@@ -83,6 +83,12 @@ $entity    = $entity ?? '';
                         <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewImport_<?= esc($modalId) ?>()">
                             <i class="bi bi-eye me-1"></i> Preview Import
                         </button>
+
+                        <?php if (($entity ?? '') === 'companies'): ?>
+                            <a href="<?= site_url('admin/import-template/companies') ?>" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Download Company Template
+                            </a>
+                        <?php endif; ?>
                     </div>
 
                     <div id="<?= esc($modalId) ?>_validation" class="mb-3"></div>

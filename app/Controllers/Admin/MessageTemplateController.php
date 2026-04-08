@@ -4,6 +4,8 @@ namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
 use App\Models\MessageTemplateModel;
+use App\Models\DocumentTemplateModel;
+use App\Models\MessageTemplateDocumentModel;
 
 class MessageTemplateController extends BaseController
 {
@@ -54,6 +56,10 @@ class MessageTemplateController extends BaseController
     {
         helper(['dropdown', 'variable', 'template_renderer']);
 
+        $model = new MessageTemplateModel();
+        $docModel = new DocumentTemplateModel();
+        $mtDocModel = new MessageTemplateDocumentModel();
+
         $statusOptions = dd_statuses_by_feature('message-templates');
         $channelOptions = [
             'email' => 'Email',
@@ -61,9 +67,12 @@ class MessageTemplateController extends BaseController
         ];
         $sourceTableOptions = template_source_tables();
 
-        if (strtolower($this->request->getMethod()) === 'post') {
-            $model = new MessageTemplateModel();
+        $documentTemplates = $docModel
+            ->where('date_deleted', null)
+            ->orderBy('name', 'ASC')
+            ->findAll();
 
+        if (strtolower($this->request->getMethod()) === 'post') {
             $name = trim((string) $this->request->getPost('name'));
             $templateKey = trim((string) $this->request->getPost('template_key'));
             $channel = trim((string) $this->request->getPost('channel')) ?: 'email';
@@ -99,6 +108,17 @@ class MessageTemplateController extends BaseController
                 'date_created'   => date('Y-m-d H:i:s'),
             ]);
 
+            $messageTemplateId = (int) $model->getInsertID();
+            $documentTemplateIds = $this->normalizeDocumentIds($this->request->getPost('document_template_ids'));
+
+            foreach ($documentTemplateIds as $documentTemplateId) {
+                $mtDocModel->insert([
+                    'message_template_id'  => $messageTemplateId,
+                    'document_template_id' => $documentTemplateId,
+                    'date_created'         => date('Y-m-d H:i:s'),
+                ]);
+            }
+
             return redirect()->to('/admin/message-templates')->with('success', 'Message template created.');
         }
 
@@ -109,6 +129,8 @@ class MessageTemplateController extends BaseController
             'statusOptions'      => $statusOptions,
             'channelOptions'     => $channelOptions,
             'sourceTableOptions' => $sourceTableOptions,
+            'documentTemplates'  => $documentTemplates,
+            'selectedDocs'       => old('document_template_ids') ?? [],
         ]);
     }
 
@@ -117,6 +139,9 @@ class MessageTemplateController extends BaseController
         helper(['dropdown', 'variable', 'template_renderer']);
 
         $model = new MessageTemplateModel();
+        $docModel = new DocumentTemplateModel();
+        $mtDocModel = new MessageTemplateDocumentModel();
+
         $id = (int) $id;
 
         $template = $model->where('date_deleted', null)->find($id);
@@ -131,6 +156,16 @@ class MessageTemplateController extends BaseController
             'sms'   => 'SMS',
         ];
         $sourceTableOptions = template_source_tables();
+
+        $documentTemplates = $docModel
+            ->where('date_deleted', null)
+            ->orderBy('name', 'ASC')
+            ->findAll();
+
+        $selectedDocs = $mtDocModel
+            ->where('message_template_id', $id)
+            ->where('date_deleted', null)
+            ->findColumn('document_template_id') ?? [];
 
         if (strtolower($this->request->getMethod()) === 'post') {
             $name = trim((string) $this->request->getPost('name'));
@@ -169,6 +204,25 @@ class MessageTemplateController extends BaseController
                 'date_updated'   => date('Y-m-d H:i:s'),
             ]);
 
+            $mtDocModel
+                ->where('message_template_id', $id)
+                ->where('date_deleted', null)
+                ->set([
+                    'date_deleted' => date('Y-m-d H:i:s'),
+                    'date_updated' => date('Y-m-d H:i:s'),
+                ])
+                ->update();
+
+            $documentTemplateIds = $this->normalizeDocumentIds($this->request->getPost('document_template_ids'));
+
+            foreach ($documentTemplateIds as $documentTemplateId) {
+                $mtDocModel->insert([
+                    'message_template_id'  => $id,
+                    'document_template_id' => $documentTemplateId,
+                    'date_created'         => date('Y-m-d H:i:s'),
+                ]);
+            }
+
             return redirect()->to('/admin/message-templates')->with('success', 'Message template updated.');
         }
 
@@ -179,14 +233,27 @@ class MessageTemplateController extends BaseController
             'statusOptions'      => $statusOptions,
             'channelOptions'     => $channelOptions,
             'sourceTableOptions' => $sourceTableOptions,
+            'documentTemplates'  => $documentTemplates,
+            'selectedDocs'       => old('document_template_ids') ?? $selectedDocs,
         ]);
     }
 
     public function delete($id)
     {
-        (new MessageTemplateModel())->update((int) $id, [
+        $id = (int) $id;
+
+        (new MessageTemplateModel())->update($id, [
             'date_deleted' => date('Y-m-d H:i:s'),
         ]);
+
+        (new MessageTemplateDocumentModel())
+            ->where('message_template_id', $id)
+            ->where('date_deleted', null)
+            ->set([
+                'date_deleted' => date('Y-m-d H:i:s'),
+                'date_updated' => date('Y-m-d H:i:s'),
+            ])
+            ->update();
 
         return redirect()->to('/admin/message-templates')->with('success', 'Message template deleted.');
     }
@@ -196,6 +263,8 @@ class MessageTemplateController extends BaseController
         helper(['variable', 'template_renderer']);
 
         $model = new MessageTemplateModel();
+        $mtDocModel = new MessageTemplateDocumentModel();
+
         $template = $model->where('date_deleted', null)->find((int) $templateId);
 
         if (! $template) {
@@ -210,11 +279,20 @@ class MessageTemplateController extends BaseController
         $subject = render_template((string) ($template['subject'] ?? ''), $data);
         $body = render_template((string) ($template['body_template'] ?? ''), $data);
 
+        $documents = $mtDocModel
+            ->select('document_templates.id, document_templates.name, document_templates.template_key, document_templates.template_type, document_templates.file_name_pattern')
+            ->join('document_templates', 'document_templates.id = message_template_documents.document_template_id', 'inner')
+            ->where('message_template_documents.message_template_id', (int) $templateId)
+            ->where('message_template_documents.date_deleted', null)
+            ->where('document_templates.date_deleted', null)
+            ->findAll();
+
         return $this->response->setJSON([
-            'status'  => true,
-            'subject' => $subject,
-            'body'    => $body,
-            'data'    => $data,
+            'status'    => true,
+            'subject'   => $subject,
+            'body'      => $body,
+            'data'      => $data,
+            'documents' => $documents,
         ]);
     }
 
@@ -228,5 +306,22 @@ class MessageTemplateController extends BaseController
         }
 
         return $map;
+    }
+
+    private function normalizeDocumentIds($documentTemplateIds): array
+    {
+        if (! is_array($documentTemplateIds)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($documentTemplateIds as $id) {
+            $id = (int) $id;
+            if ($id > 0) {
+                $normalized[$id] = $id;
+            }
+        }
+
+        return array_values($normalized);
     }
 }

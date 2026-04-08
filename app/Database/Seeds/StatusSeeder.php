@@ -20,18 +20,33 @@ class StatusSeeder extends Seeder
         $statusMap = [
             'Active'   => ['users', 'roles', 'modules', 'categories', 'status', 'companies', 'departments', 'site-settings', 'message-templates', 'document-templates', 'jobs', 'job-posts', 'contents'],
             'Inactive' => ['users', 'roles', 'companies', 'departments', 'site-settings', 'message-templates', 'document-templates'],
-            'Draft'     => ['jobs', 'job-posts', 'contents'],
-            'Submitted' => ['contents'],
-            'Approved'  => ['contents'],
-            'Rejected'  => ['applications', 'contents'],
+
+            'Draft'     => ['jobs', 'job-posts', 'contents', 'mfi'],
+            'Submitted' => ['contents', 'job-posts', 'mfi'],
+            'Approved'  => ['contents', 'job-posts', 'mfi'],
+            'Rejected'  => ['contents', 'job-posts', 'mfi'],
             'Published' => ['contents'],
             'Archived'  => ['contents'],
-            'Applied'   => ['applications'],
-            'Screening' => ['applications'],
-            'Interview' => ['applications'],
-            'Offered'   => ['applications'],
-            'Hired'     => ['applications'],
             'Closed'    => ['job-posts'],
+
+            // Applications workflow
+            'Pre-Screening'     => ['applications'],
+            'Shortlist'         => ['applications'],
+            '1st Interview'     => ['applications'],
+            '2nd Interview'     => ['applications'],
+            '3rd Interview'     => ['applications'],
+            'Exam'              => ['applications'],
+            'BI'                => ['applications'],
+            'Job Offer Approval'=> ['applications'],
+            'Re-Route'          => ['applications'],
+            'Offer'             => ['applications'],
+            'Hired'             => ['applications'],
+            'On-Boarding'       => ['applications'],
+            'Hold'              => ['applications'],
+            'Withdraw'          => ['applications'],
+            'Failed'            => ['applications'],
+            'No Show'           => ['applications'],
+            'Decline'           => ['applications'],
         ];
 
         foreach ($statusMap as $statusName => $featureCodes) {

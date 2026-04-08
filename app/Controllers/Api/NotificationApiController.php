@@ -27,54 +27,77 @@ public function index()
             'message' => 'Email controller is working'
         ]);
     }
+public static function send($to, $param = [])
+{
+    $email = service('email');
 
-    public static function send($email=null,  $param = [])
-    {   
-        // dd($param['password']);
+    $template = MessageTemplateRenderer::renderByKey($param['template'], $param);
+
+    $email->setFrom('ggvivar@joy-nostalg.com', 'JN Career');
+    $email->setTo($to);
+    $email->setSubject($template['subject']);
+    $email->setMessage($template['body']);
+
+    if ($email->send()) {
+        return [
+            'status'  => 'success',
+            'message' => 'Email sent successfully',
+        ];
+    }
+
+    return [
+        'status'  => 'error',
+        'message' => 'Failed to send email',
+        'debug'   => $email->printDebugger(['headers']),
+    ];
+}
+    // public static function send($email=null,  $param = [])
+    // {   
+    //     // dd($param['password']);
         
-        $email = service('email');
-        $to      ='vivar.gari@gmail.com';
-        $subject = 'Test Forgot Password';
-        $message = $param['password'];
+    //     $email = service('email');
+    //     $to      ='vivar.gari@gmail.com';
+    //     $subject = 'Test Forgot Password';
+    //     $message = $param['password'];
 
   
-        // Library('MessageTemplateRenderer');
-        $template = MessageTemplateRenderer::renderByKey($param['template'], $param);
-        // dd($template['body']);
-        $email->setFrom('ggvivar@joy-nostalg.com', 'JN Career');
-        $email->setTo($to);
-        $email->setSubject($template['subject']);
-        $email->setMessage($template['body']);
+    //     // Library('MessageTemplateRenderer');
+    //     $template = MessageTemplateRenderer::renderByKey($param['template'], $param);
+    //     // dd($template['body']);
+    //     $email->setFrom('ggvivar@joy-nostalg.com', 'JN Career');
+    //     $email->setTo($to);
+    //     $email->setSubject($template['subject']);
+    //     $email->setMessage($template['body']);
 
-        helper(['document_template', 'email_template']);
-            // $file = render_document_template(
-            //     'new_employee_decision_form',
-            //     [
-            //         'lastname' => 'Vivar',
-            //         'firstname' => 'Gari',
-            //         'middlename' => 'Geronimo',
+    //     helper(['document_template', 'email_template']);
+    //         // $file = render_document_template(
+    //         //     'new_employee_decision_form',
+    //         //     [
+    //         //         'lastname' => 'Vivar',
+    //         //         'firstname' => 'Gari',
+    //         //         'middlename' => 'Geronimo',
                     
-            //         'jobname' => 'Backend Developer',
-            //         'Group' => 'IMG',
-            //         'Unit' => 'DDU',
+    //         //         'jobname' => 'Backend Developer',
+    //         //         'Group' => 'IMG',
+    //         //         'Unit' => 'DDU',
 
-            //     ]
-            // );
-        // dd(file_exists($file));
-        // $email->attach($file);
-        if ($email->send()) {
-            return [
-                'status'  => 'success',
-                'message' => 'Email sent successfully',
-            ];
-        }
+    //         //     ]
+    //         // );
+    //     // dd(file_exists($file));
+    //     // $email->attach($file);
+    //     if ($email->send()) {
+    //         return [
+    //             'status'  => 'success',
+    //             'message' => 'Email sent successfully',
+    //         ];
+    //     }
 
-        return $this->response->setStatusCode(500)->setJSON([
-            'status'  => 'error',
-            'message' => 'Failed to send email',
-            'debug'   => $email->printDebugger(['headers']),
-        ]);
-    }
+    //     return $this->response->setStatusCode(500)->setJSON([
+    //         'status'  => 'error',
+    //         'message' => 'Failed to send email',
+    //         'debug'   => $email->printDebugger(['headers']),
+    //     ]);
+    // }
     public function send_attachment()
     {
     helper(['document_template', 'email_template']);

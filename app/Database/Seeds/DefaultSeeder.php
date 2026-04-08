@@ -8,7 +8,7 @@ class DefaultSeeder extends Seeder
 {
     public function run()
     {
-        $this->call('ModuleSeeder');
+        // $this->call('ModuleSeeder');
         $this->call('RoleSeeder');
         $this->call('CompanySeeder');
         $this->call('DepartmentSeeder');

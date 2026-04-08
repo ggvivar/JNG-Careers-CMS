@@ -68,17 +68,42 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->match(['get', 'post'], 'jobs/edit/(:num)', 'JobController::edit/$1', ['filter' => 'adminfeature:jobs,can_edit']);
         $routes->post('jobs/delete/(:num)', 'JobController::delete/$1', ['filter' => 'adminfeature:jobs,can_delete']);
 
+        $routes->get('jobs/units-by-company', 'JobController::getUnitsByCompany');
+        $routes->get('jobs/groups-by-unit', 'JobController::getGroupsByUnit');
+
         $routes->get('job-posts', 'JobPostController::index', ['filter' => 'adminfeature:job-posts,can_view']);
         $routes->match(['get', 'post'], 'job-posts/create', 'JobPostController::create', ['filter' => 'adminfeature:job-posts,can_add']);
         $routes->match(['get', 'post'], 'job-posts/edit/(:num)', 'JobPostController::edit/$1', ['filter' => 'adminfeature:job-posts,can_edit']);
         $routes->post('job-posts/delete/(:num)', 'JobPostController::delete/$1', ['filter' => 'adminfeature:job-posts,can_delete']);
+        $routes->get('job-posts/list', 'JobPostController::JobList', ['filter' => 'adminfeature:job-posts,can_view']);
 
         $routes->get('applicants', 'ApplicantController::index', ['filter' => 'adminfeature:applicants,can_view']);
+        $routes->match(['get','post'],'applicants/create', 'ApplicantController::create', ['filter' => 'adminfeature:applicants,can_add']);
+        $routes->match(['get','post'],'applicants/edit/(:num)','ApplicantController::edit/$1', ['filter' => 'adminfeature:job-posts,can_edit']);
+        
         $routes->get('applicants/(:num)', 'ApplicantController::view/$1', ['filter' => 'adminfeature:applicants,can_view']);
-
-        $routes->get('applications', 'ApplicationController::index', ['filter' => 'adminfeature:applications,can_view']);
+        $routes->post('applicants/update-inline-profile/(:num)', 'Admin\ApplicantController::updateInlineProfile/$1');
+        $routes->post('applicants/save-education/(:num)', 'ApplicantController::saveEducationInline/$1');
+        $routes->post('applicants/delete-education/(:num)', 'ApplicantController::deleteEducationInline/$1');
+        $routes->post('applicants/save-job-history/(:num)', 'ApplicantController::saveJobHistoryInline/$1');
+        $routes->post('applicants/delete-job-history/(:num)', 'ApplicantController::deleteJobHistoryInline/$1');
+        
+        $routes->get('applicants/list', 'ApplicantController::List', ['filter' => 'adminfeature:applicants,can_view']);
+        $routes->post('applicants/add', 'ApplicantController::Add', ['filter' => 'adminfeature:applicants,can_add']);
+        $routes->get('applications/assigned-to-me', 'ApplicationController::assigned', ['filter' => 'adminfeature:applications,can_view']);
+        //Application Admin
+        $routes->match(['get', 'post'], 'applications/create', 'ApplicationController::create', ['filter' => 'adminfeature:applications,can_add']);
         $routes->get('applications/(:num)', 'ApplicationController::view/$1', ['filter' => 'adminfeature:applications,can_view']);
         $routes->post('applications/(:num)/status', 'ApplicationController::updateStatus/$1', ['filter' => 'adminfeature:applications,can_edit']);
+        $routes->post('applications/assign/(:num)', 'ApplicationController::assignProcessor/$1', ['filter' => 'adminfeature:applications,can_edit']);
+        $routes->get('applications/next-statuses/(:num)', 'ApplicationController::nextStatuses/$1', ['filter' => 'adminfeature:applications,can_view']);
+        $routes->post('applications/(:num)/workflow', 'ApplicationController::updateWorkflow/$1', ['filter' => 'adminfeature:applications,can_edit']);
+
+        $routes->get('applications', 'ApplicationController::index', ['filter' => 'adminfeature:applications,can_view']);
+        // $routes->get('applications/(:num)', 'ApplicationController::view/$1', ['filter' => 'adminfeature:applications,can_view']);
+        // $routes->post('applications/(:num)/status', 'ApplicationController::updateStatus/$1', ['filter' => 'adminfeature:applications,can_edit']);
+        // $routes->match(['get','post'], 'applications/create', 'ApplicationController::create', ['filter' => 'adminfeature:applications,can_add']);
+        // $routes->post('applications/delete/(:num)', 'ApplicationController::delete/$1', ['filter' => 'adminfeature:applications,can_delete']);
 
         $routes->get('contents', 'ContentController::index', ['filter' => 'adminfeature:contents,can_view']);
         $routes->match(['get', 'post'], 'contents/create', 'ContentController::create', ['filter' => 'adminfeature:contents,can_add']);
@@ -94,6 +119,7 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->get('export-columns/(:segment)', 'ImportExportController::columns/$1');
         $routes->get('export-preview/(:segment)', 'ImportExportController::exportPreview/$1');
         $routes->post('import-preview/(:segment)', 'ImportExportController::previewImport/$1');
+        $routes->get('import-template/(:segment)', 'ImportExportController::template/$1');
         // $routes->get('export/(:segment)', 'ImportExportController::export/$1');
         // $routes->post('import/(:segment)', 'ImportExportController::import/$1');
         // $routes->get('export-columns/(:segment)', 'ImportExportController::columns/$1');
@@ -105,7 +131,26 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         //Site Settings
         $routes->get('site-settings', 'SiteSettingsController::index', ['filter' => 'adminfeature:site-settings,can_view']);
         $routes->post('site-settings/save', 'SiteSettingsController::save', ['filter' => 'adminfeature:site-settings,can_edit']);
+        //Common Default
+       // ✅ Common Defaults (Maintenance)
+        $routes->get('common-defaults', 'CommonDefaultController::index');
+        $routes->match(['get', 'post'], 'common-defaults/create', 'CommonDefaultController::create');
+        $routes->match(['get', 'post'], 'common-defaults/edit/(:num)', 'CommonDefaultController::edit/$1');
+        $routes->post('common-defaults/delete/(:num)', 'CommonDefaultController::delete/$1');
+        //added for inline saving
+        $routes->post('common-defaults/save-inline', 'CommonDefaultController::saveInline');
+        $routes->post('common-defaults/delete-inline/(:num)', 'CommonDefaultController::deleteInline/$1');
+        $routes->post('common-defaults/create-group', 'CommonDefaultController::createGroup');
+        $routes->post('common-defaults/rename-group', 'CommonDefaultController::renameGroup');
+        $routes->post('common-defaults/delete-group', 'CommonDefaultController::deleteGroup');
         });
+        //Workflow
+        $routes->get('workflows', 'WorkflowTransitionController::index', ['filter' => 'adminfeature:status,can_view']);
+        $routes->match(['get', 'post'], 'workflows/create', 'WorkflowTransitionController::create', ['filter' => 'adminfeature:status,can_add']);
+        $routes->match(['get', 'post'], 'workflows/edit/(:num)', 'WorkflowTransitionController::edit/$1', ['filter' => 'adminfeature:status,can_edit']);
+        $routes->post('workflows/delete/(:num)', 'WorkflowTransitionController::delete/$1', ['filter' => 'adminfeature:status,can_delete']);
+        $routes->get('workflows/statuses-by-feature', 'WorkflowTransitionController::statusesByFeature', ['filter' => 'adminfeature:status,can_view']);
+        $routes->match(['get', 'post'], 'workflows/edit-feature/(:segment)', 'WorkflowTransitionController::editFeature/$1', ['filter' => 'adminfeature:workflows,can_edit']);
         //Messaging 
         $routes->get('message-templates', 'MessageTemplateController::index', ['filter' => 'adminfeature:message-templates,can_view']);
         $routes->match(['get', 'post'], 'message-templates/create', 'MessageTemplateController::create', ['filter' => 'adminfeature:message-templates,can_add']);
@@ -118,40 +163,41 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->match(['get', 'post'], 'document-templates/edit/(:num)', 'DocumentTemplateController::edit/$1', ['filter' => 'adminfeature:document-templates,can_edit']);
         $routes->post('document-templates/delete/(:num)', 'DocumentTemplateController::delete/$1', ['filter' => 'adminfeature:document-templates,can_delete']);
         });
-//APIs Routes
-$routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
-    // var_dump('here');
-    // die();
-$routes->get('send', 'NotificationApiController::send');
-$routes->get('send_attachment', 'NotificationApiController::send_attachment');
-    //Contents
-    $routes->get('content/all', 'ContentController::all');
-    //Content-Category
-    
-    $routes->get('content/(:segment)/(:segment)/(:segment)/(:segment)', 'ContentController::byCategoryKeys/$1/$2/$3/$4');
-    $routes->get('content/category', 'ContentController::byCategory');
-    $routes->get('content/category/(:segment)', 'ContentController::byCategory/$1');
+    //APIs Routes
+    $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
+        // var_dump('here');
+        // die();
+        $routes->get('send', 'NotificationApiController::send');
+        $routes->get('send_attachment', 'NotificationApiController::send_attachment');
+        //Contents
+        $routes->get('content/all', 'ContentController::all');
+        //Content-Category
+        
+        $routes->get('content/(:segment)/(:segment)/(:segment)/(:segment)', 'ContentController::byCategoryKeys/$1/$2/$3/$4');
+        $routes->get('content/category', 'ContentController::byCategory');
+        $routes->get('content/category/(:segment)', 'ContentController::byCategory/$1');
 
 
-    $routes->get('content/year/(:segment)', 'ContentController::year/$1');
-     // applicant auth
-    $routes->post('applicant/register', 'ApplicantController::register');
-    $routes->post('applicant/login', 'ApplicantController::login');
-    $routes->post('applicant/forgot-password', 'ApplicantController::forgotPassword');
-    $routes->post('applicant/reset-password', 'ApplicantController::resetPassword');
+        $routes->get('content/year/(:segment)', 'ContentController::year/$1');
+        // applicant auth
+        $routes->post('applicant/register', 'ApplicantController::register');
+        $routes->post('applicant/login', 'ApplicantController::login');
+        $routes->post('applicant/forgot-password', 'ApplicantController::forgotPassword');
+        $routes->post('applicant/reset-password', 'ApplicantController::resetPassword');
 
-    // public jobs
-    $routes->get('jobs', 'JobPortalController::jobs');
-    $routes->get('jobs/(:num)', 'JobPortalController::jobDetail/$1');
+        // public jobs
+        $routes->get('jobs', 'JobPortalController::jobs');
+        $routes->get('jobs/(:num)', 'JobPortalController::jobDetail/$1');
 
-    // protected applicant portal
-    $routes->group('', ['filter' => 'applicantauth'], function ($routes) {
+        // protected applicant portal
+        $routes->group('', ['filter' => 'applicantauth'], function ($routes) {
         $routes->get('applicant/me', 'ApplicantController::me');
         $routes->post('applicant/edit', 'ApplicantController::edit');
         $routes->post('applicant/logout', 'ApplicantController::logout');
         $routes->get('applicant/dashboard', 'ApplicantController::dashboard');
         $routes->post('applicant/upload-resume', 'ApplicantController::uploadResume');
-
+        $routes->post('applicant/education', 'ApplicantController::saveEducation');
+        $routes->post('applicant/job-history', 'ApplicantController::saveJobHistory');
         $routes->get('application/mine', 'ApplicationController::mine');
         $routes->get('application/(:num)', 'ApplicationController::detail/$1');
         $routes->post('application/create', 'ApplicationController::create');

@@ -5,6 +5,8 @@
     'title' => 'Applicants',
     'subtitle' => 'Manage applicants',
     'featureCode' => 'applicants',
+    'createUrl' => 'admin/applicants/create',
+    'createLabel' => 'Create Applicants',
     'searchQuery' => $searchQuery ?? '',
     'searchPlaceholder' => 'Search applicants...',
     'paginationLinks' => $paginationLinks ?? '',

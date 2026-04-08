@@ -1,0 +1,505 @@
+<?php
+
+namespace App\Controllers\Admin;
+
+use App\Controllers\BaseController;
+use App\Models\ApplicantModel;
+use App\Models\ApplicantEducationModel;
+use App\Models\ApplicantJobHistoryModel;
+use App\Models\JobApplicationModel;
+use App\Models\ApplicantDocumentAttachmentModel;
+use App\Models\ApplicantEmploymentDetailModel;
+
+class ApplicantController extends BaseController
+{
+    protected ApplicantModel $applicantModel;
+    protected ApplicantEducationModel $educationModel;
+    protected ApplicantJobHistoryModel $jobHistoryModel;
+    protected JobApplicationModel $jobApplicationModel;
+    protected ApplicantDocumentAttachmentModel $documentAttachmentModel;
+    protected ApplicantEmploymentDetailModel $employmentDetailModel;
+
+    public function __construct()
+    {
+        $this->applicantModel = new ApplicantModel();
+        $this->educationModel = new ApplicantEducationModel();
+        $this->jobHistoryModel = new ApplicantJobHistoryModel();
+        $this->jobApplicationModel = new JobApplicationModel();
+        $this->documentAttachmentModel = new ApplicantDocumentAttachmentModel();
+        $this->employmentDetailModel = new ApplicantEmploymentDetailModel();
+    }
+    public function create()
+{
+    if (strtolower($this->request->getMethod()) === 'post') {
+
+        (new ApplicantModel())->insert([
+            'firstname'    => trim((string) $this->request->getPost('firstname')),
+            'middlename'   => trim((string) $this->request->getPost('middlename')),
+            'lastname'     => trim((string) $this->request->getPost('lastname')),
+            'email'        => trim((string) $this->request->getPost('email')),
+            'phone'        => $this->request->getPost('phone'),
+            'birthdate'    => $this->request->getPost('birthdate'),
+            'gender'       => $this->request->getPost('gender'),
+            'civil_status' => $this->request->getPost('civil_status'),
+            'nationality'  => $this->request->getPost('nationality'),
+            'address'      => $this->request->getPost('address'),
+            'city'         => $this->request->getPost('city'),
+            'province'     => $this->request->getPost('province'),
+            'zip_code'     => $this->request->getPost('zip_code'),
+            'cover_letter' => $this->request->getPost('cover_letter'),
+            'date_created' => date('Y-m-d H:i:s'),
+        ]);
+
+        return redirect()->to('/admin/applicants')->with('success', 'Applicant created.');
+    }
+
+    return view('admin/applicants/form', [
+        'mode' => 'create',
+        'applicant' => null,
+    ]);
+}
+
+public function edit($id)
+{
+    helper(['form', 'filesystem']);
+
+    $id = (int) $id;
+    $applicant = $this->applicantModel->where('date_deleted', null)->find($id);
+
+    if (! $applicant) {
+        return redirect()->to('/admin/applicants')->with('error', 'Applicant not found.');
+    }
+
+    if (strtolower($this->request->getMethod()) === 'post') {
+        $db = db_connect();
+        $db->transBegin();
+
+        try {
+            // 1. Update applicant profile
+            $this->applicantModel->update($id, [
+                'firstname'    => trim((string) $this->request->getPost('firstname')),
+                'middlename'   => trim((string) $this->request->getPost('middlename')) ?: null,
+                'lastname'     => trim((string) $this->request->getPost('lastname')),
+                'email'        => trim((string) $this->request->getPost('email')),
+                'phone'        => trim((string) $this->request->getPost('phone')) ?: null,
+                'birthdate'    => $this->request->getPost('birthdate') ?: null,
+                'gender'       => $this->request->getPost('gender') ?: null,
+                'civil_status' => $this->request->getPost('civil_status') ?: null,
+                'nationality'  => trim((string) $this->request->getPost('nationality')) ?: null,
+                'address'      => trim((string) $this->request->getPost('address')) ?: null,
+                'city'         => trim((string) $this->request->getPost('city')) ?: null,
+                'province'     => trim((string) $this->request->getPost('province')) ?: null,
+                'zip_code'     => trim((string) $this->request->getPost('zip_code')) ?: null,
+                'cover_letter' => trim((string) $this->request->getPost('cover_letter')) ?: null,
+                'date_updated' => date('Y-m-d H:i:s'),
+            ]);
+
+            // 2. Replace education rows
+            $this->educationModel->where('applicant_id', $id)->delete();
+
+            $schools = $this->request->getPost('education_school_name') ?? [];
+            $degrees = $this->request->getPost('education_degree') ?? [];
+            $fields  = $this->request->getPost('education_field_of_study') ?? [];
+            $starts  = $this->request->getPost('education_start_year') ?? [];
+            $ends    = $this->request->getPost('education_end_year') ?? [];
+            $honors  = $this->request->getPost('education_honors') ?? [];
+
+            foreach ($schools as $i => $schoolName) {
+                $schoolName = trim((string) $schoolName);
+                if ($schoolName === '') {
+                    continue;
+                }
+
+                $this->educationModel->insert([
+                    'applicant_id'    => $id,
+                    'school_name'     => $schoolName,
+                    'degree'          => trim((string) ($degrees[$i] ?? '')) ?: null,
+                    'field_of_study'  => trim((string) ($fields[$i] ?? '')) ?: null,
+                    'start_year'      => trim((string) ($starts[$i] ?? '')) ?: null,
+                    'end_year'        => trim((string) ($ends[$i] ?? '')) ?: null,
+                    'honors'          => trim((string) ($honors[$i] ?? '')) ?: null,
+                    'date_created'    => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            // 3. Replace job history rows
+            $this->jobHistoryModel->where('applicant_id', $id)->delete();
+
+            $companies          = $this->request->getPost('job_company_name') ?? [];
+            $companyAddresses   = $this->request->getPost('job_company_address') ?? [];
+            $jobTitles          = $this->request->getPost('job_title') ?? [];
+            $departments        = $this->request->getPost('job_department') ?? [];
+            $startDates         = $this->request->getPost('job_start_date') ?? [];
+            $endDates           = $this->request->getPost('job_end_date') ?? [];
+            $currentlyWorking   = $this->request->getPost('job_currently_working') ?? [];
+            $responsibilities   = $this->request->getPost('job_responsibilities') ?? [];
+            $salaries           = $this->request->getPost('job_salary') ?? [];
+            $reasonsForLeaving  = $this->request->getPost('job_reason_for_leaving') ?? [];
+
+            foreach ($companies as $i => $companyName) {
+                $companyName = trim((string) $companyName);
+                if ($companyName === '') {
+                    continue;
+                }
+
+                $this->jobHistoryModel->insert([
+                    'applicant_id'         => $id,
+                    'company_name'         => $companyName,
+                    'company_address'      => trim((string) ($companyAddresses[$i] ?? '')) ?: null,
+                    'job_title'            => trim((string) ($jobTitles[$i] ?? '')) ?: null,
+                    'department'           => trim((string) ($departments[$i] ?? '')) ?: null,
+                    'start_date'           => ($startDates[$i] ?? '') ?: null,
+                    'end_date'             => ($endDates[$i] ?? '') ?: null,
+                    'currently_working'    => !empty($currentlyWorking[$i]) ? 1 : 0,
+                    'responsibilities'     => trim((string) ($responsibilities[$i] ?? '')) ?: null,
+                    'salary'               => trim((string) ($salaries[$i] ?? '')) ?: null,
+                    'reason_for_leaving'   => trim((string) ($reasonsForLeaving[$i] ?? '')) ?: null,
+                    'date_created'         => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            // 4. Upload resume
+            $resume = $this->request->getFile('resume');
+
+            if ($resume && $resume->isValid() && ! $resume->hasMoved()) {
+                $uploadPath = FCPATH . 'uploads/applicants/' . $id;
+
+                if (! is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
+                }
+
+                $newName = $resume->getRandomName();
+                $resume->move($uploadPath, $newName);
+
+                // optional: soft-delete old resume records
+                $oldResume = $this->documentAttachmentModel->getResumeByApplicantId($id);
+                if ($oldResume) {
+                    $this->documentAttachmentModel->update($oldResume['id'], [
+                        'date_deleted' => date('Y-m-d H:i:s'),
+                    ]);
+                }
+
+                $this->documentAttachmentModel->insert([
+                    'applicant_id' => $id,
+                    'document_type' => 'Resume',
+                    'file_name' => $resume->getClientName(),
+                    'file_path' => 'uploads/applicants/' . $id . '/' . $newName,
+                    'file_ext' => $resume->getExtension(),
+                    'file_size' => $resume->getSize(),
+                    'date_created' => date('Y-m-d H:i:s'),
+                ]);
+            }
+
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Failed to save applicant.');
+            }
+
+            $db->transCommit();
+
+            return redirect()->to('/admin/applicants/' . $id)
+                ->with('success', 'Applicant updated.');
+        } catch (\Throwable $e) {
+            $db->transRollback();
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    $educations = $this->educationModel->getByApplicantId($id);
+    $jobHistory = $this->jobHistoryModel->getByApplicantId($id);
+    $documents  = $this->documentAttachmentModel->getByApplicantId($id);
+
+    return view('admin/applicants/form', [
+        'mode' => 'edit',
+        'applicant' => $applicant,
+        'educations' => $educations,
+        'jobHistory' => $jobHistory,
+        'documents' => $documents,
+    ]);
+}
+    public function index()
+    {
+        $q = trim((string) $this->request->getGet('q'));
+        $page = max(1, (int) ($this->request->getGet('page') ?? 1));
+        $perPage = 10;
+
+        $result = $this->applicantModel->getPaginatedApplicants($q, $perPage, $page);
+
+        return view('admin/applicants/index', [
+            'applicants'      => $result['rows'],
+            'searchQuery'     => $q,
+            'paginationLinks' => service('pager')->makeLinks($page, $perPage, $result['total']),
+        ]);
+    }
+    public function profile(){
+    $applicant = service('request')->applicant;
+    $applicantId = (int) $applicant['id'];
+    $db = db_connect();
+
+    // Load applications
+    $applications = $db->table('job_applications ja')
+        ->select('ja.id, ja.applied_at, s.name as status_name, j.name as job_name')
+        ->join('job_list jl', 'jl.id = ja.job_list_id', 'left')
+        ->join('job j', 'j.id = jl.job_id', 'left')
+        ->join('status s', 's.id = ja.status_id', 'left')
+        ->where('ja.applicant_id', $applicantId)
+        ->where('ja.date_deleted', null)
+        ->orderBy('ja.id', 'DESC')
+        ->get()
+        ->getResultArray();
+
+    // Load notifications
+    $notifications = $db->table('applicant_notifications')
+        ->where('applicant_id', $applicantId)
+        ->orderBy('id', 'DESC')
+        ->limit(10)
+        ->get()
+        ->getResultArray();
+
+    // Load education
+    $educationModel = new \App\Models\ApplicantEducationModel();
+    $education = $educationModel->getByApplicantId($applicantId);
+
+    // Load job history
+    $jobHistoryModel = new \App\Models\ApplicantJobHistoryModel();
+    $jobHistory = $jobHistoryModel->getByApplicantId($applicantId);
+
+    return $this->response->setJSON([
+        'status' => true,
+        'data' => [
+            'profile' => [
+                'id' => $applicant['id'],
+                'firstname' => $applicant['firstname'],
+                'middlename' => $applicant['middlename'] ?? null,
+                'lastname' => $applicant['lastname'],
+                'email' => $applicant['email'],
+                'phone' => $applicant['phone'] ?? null,
+                'birthdate' => $applicant['birthdate'] ?? null,
+                'gender' => $applicant['gender'] ?? null,
+                'civil_status' => $applicant['civil_status'] ?? null,
+                'nationality' => $applicant['nationality'] ?? null,
+                'address' => $applicant['address'] ?? null,
+                'city' => $applicant['city'] ?? null,
+                'province' => $applicant['province'] ?? null,
+                'zip_code' => $applicant['zip_code'] ?? null,
+                'cover_letter' => $applicant['cover_letter'] ?? null,
+            ],
+            'applications' => $applications,
+            'notifications' => $notifications,
+            'education' => $education,
+            'job_history' => $jobHistory,
+        ],
+    ]);
+    
+    }
+    public function view($id)
+    {
+        $id = (int) $id;
+
+        $applicant = $this->applicantModel->getApplicantById($id);
+
+        if (! $applicant) {
+            return redirect()->to('/admin/applicants')->with('error', 'Applicant not found.');
+        }
+
+        $educations = $this->educationModel->getByApplicantId($id);
+        $jobHistory = $this->jobHistoryModel->getByApplicantId($id);
+        $applications = $this->jobApplicationModel->getByApplicantId($id);
+        $documents = $this->documentAttachmentModel->getByApplicantId($id);
+
+        return view('admin/applicants/view', [
+            'applicant'    => $applicant,
+            'educations'   => $educations,
+            'jobHistory'   => $jobHistory,
+            'applications' => $applications,
+            'documents'    => $documents,
+        ]);
+    }
+    public function List()
+{
+    $q = trim((string) $this->request->getGet('q'));
+
+    $builder = db_connect()->table('applicants')
+        ->select('id, firstname, middlename, lastname, email, phone, city, province')
+        ->where('date_deleted', null);
+
+    if ($q !== '') {
+        $builder->groupStart()
+            ->like('firstname', $q)
+            ->orLike('middlename', $q)
+            ->orLike('lastname', $q)
+            ->orLike('email', $q)
+            ->orLike('phone', $q)
+            ->orLike('city', $q)
+            ->orLike('province', $q)
+            ->groupEnd();
+    }
+
+    $rows = $builder
+        ->orderBy('id', 'DESC')
+        ->limit(20)
+        ->get()
+        ->getResultArray();
+
+    return $this->response->setJSON([
+        'success' => true,
+        'rows' => $rows,
+    ]);
+}
+
+public function Add()
+{
+    if (! $this->request->isAJAX()) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'success' => false,
+            'message' => 'Invalid request.',
+        ]);
+    }
+
+    $firstname  = trim((string) $this->request->getPost('firstname'));
+    $middlename = trim((string) $this->request->getPost('middlename'));
+    $lastname   = trim((string) $this->request->getPost('lastname'));
+    $email      = trim((string) $this->request->getPost('email'));
+    $phone      = trim((string) $this->request->getPost('phone'));
+    $city       = trim((string) $this->request->getPost('city'));
+    $province   = trim((string) $this->request->getPost('province'));
+
+    if ($firstname === '' || $lastname === '') {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'First name and last name are required.',
+        ]);
+    }
+
+    if ($email !== '') {
+        $exists = $this->applicantModel
+            ->where('email', $email)
+            ->where('date_deleted', null)
+            ->first();
+
+        if ($exists) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Applicant email already exists.',
+            ]);
+        }
+    }
+
+    $this->applicantModel->insert([
+        'firstname'    => $firstname,
+        'middlename'   => $middlename !== '' ? $middlename : null,
+        'lastname'     => $lastname,
+        'email'        => $email !== '' ? $email : null,
+        'phone'        => $phone !== '' ? $phone : null,
+        'city'         => $city !== '' ? $city : null,
+        'province'     => $province !== '' ? $province : null,
+        'date_created' => date('Y-m-d H:i:s'),
+    ]);
+
+    $id = (int) $this->applicantModel->getInsertID();
+
+    $fullName = trim($firstname . ' ' . ($middlename !== '' ? $middlename . ' ' : '') . $lastname);
+    $display = $fullName
+        . ($email !== '' ? ' | ' . $email : '')
+        . ($phone !== '' ? ' | ' . $phone : '');
+
+    return $this->response->setJSON([
+        'success' => true,
+        'id' => $id,
+        'name' => $display,
+        'message' => 'Applicant created successfully.',
+    ]);
+}
+
+// ================= PROFILE INLINE =================
+public function updateInlineProfile($id)
+{
+    $id = (int) $id;
+
+    $this->applicantModel->update($id, [
+        'phone'     => $this->request->getPost('phone'),
+        'email'     => $this->request->getPost('email'),
+        'address'   => $this->request->getPost('address'),
+        'city'      => $this->request->getPost('city'),
+        'province'  => $this->request->getPost('province'),
+        'date_updated' => date('Y-m-d H:i:s'),
+    ]);
+
+    return $this->response->setJSON(['success' => true]);
+}
+// ================= EDUCATION =================
+public function saveEducationInline($applicantId)
+{
+    $id = $this->request->getPost('id');
+
+    $data = [
+        'applicant_id'   => $applicantId,
+        'school_name'    => $this->request->getPost('school_name'),
+        'degree'         => $this->request->getPost('degree'),
+        'field_of_study' => $this->request->getPost('field_of_study'),
+        'start_year'     => $this->request->getPost('start_year'),
+        'end_year'       => $this->request->getPost('end_year'),
+        'honors'         => $this->request->getPost('honors'),
+    ];
+
+    if ($id) {
+        $this->educationModel->update($id, $data);
+    } else {
+        $this->educationModel->insert($data);
+    }
+
+    return $this->response->setJSON(['success' => true]);
+}
+
+public function deleteEducationInline($applicantId)
+{
+    $id = $this->request->getPost('id');
+
+    if ($id) {
+        $this->educationModel->delete($id);
+    }
+
+    return $this->response->setJSON(['success' => true]);
+}
+// ================= JOB HISTORY =================
+public function saveJobHistoryInline($applicantId)
+{
+    $id = $this->request->getPost('id');
+
+    $data = [
+        'applicant_id'       => $applicantId,
+        'company_name'       => $this->request->getPost('company_name'),
+        'company_address'    => $this->request->getPost('company_address'),
+        'job_title'          => $this->request->getPost('job_title'),
+        'department'         => $this->request->getPost('department'),
+        'start_date'         => $this->request->getPost('start_date'),
+        'end_date'           => $this->request->getPost('end_date'),
+        'currently_working'  => $this->request->getPost('currently_working') ? 1 : 0,
+        'responsibilities'   => $this->request->getPost('responsibilities'),
+        'salary'             => $this->request->getPost('salary'),
+        'reason_for_leaving' => $this->request->getPost('reason_for_leaving'),
+    ];
+
+    if ($id) {
+        $this->jobHistoryModel->update($id, $data);
+    } else {
+        $data['sort_order'] = time(); // fallback ordering
+        $this->jobHistoryModel->insert($data);
+    }
+
+    return $this->response->setJSON(['success' => true]);
+}
+
+public function deleteJobHistoryInline($applicantId)
+{
+    $id = $this->request->getPost('id');
+
+    if ($id) {
+        $this->jobHistoryModel->delete($id);
+    }
+
+    return $this->response->setJSON(['success' => true]);
+}
+}

@@ -185,6 +185,57 @@
         border-color: #0d6efd !important;
         box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .12) !important;
     }
+
+    .attachment-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .attachment-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        border-radius: 999px;
+        padding: .45rem .75rem;
+        background: #f5f7fa;
+        border: 1px solid #e4e7ec;
+        font-size: .82rem;
+        color: #344054;
+    }
+
+    .attachment-preview-list {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .attachment-preview-item {
+        padding: .75rem 1rem;
+        border: 1px solid #e4e7ec;
+        border-radius: 12px;
+        background: #fff;
+    }
+    .attachment-search-shell .input-group-text,
+.attachment-search-shell .form-control {
+    border-radius: 12px;
+}
+
+.attachment-search-shell .input-group .input-group-text {
+    border-color: #dbe1e7;
+}
+
+.attachment-search-shell .input-group .form-control {
+    border-color: #dbe1e7;
+}
+
+.attachment-search-shell .input-group .form-control:focus {
+    box-shadow: none !important;
+}
+
+#document_template_ids option[hidden] {
+    display: none;
+}
 </style>
 
 <div class="content-page">
@@ -195,7 +246,7 @@
                 <span><?= esc($mode === 'edit' ? 'Edit Mode' : 'Create Mode') ?></span>
             </div>
             <h2 class="page-title"><?= esc($mode === 'edit' ? 'Edit Message Template' : 'Create Message Template') ?></h2>
-            <p class="page-subtitle">Manage reusable email and SMS templates with drag-and-drop variables.</p>
+            <p class="page-subtitle">Manage reusable email and SMS templates with drag-and-drop variables and maintainable document attachments.</p>
         </div>
 
         <div class="d-flex gap-2">
@@ -274,6 +325,74 @@
 
         <div class="modern-card">
             <div class="section-header">
+                <h3 class="section-title">Attachments</h3>
+                <div class="section-subtitle">Attach reusable document templates to this message</div>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <label class="form-label">Document Templates</label>
+                        <div class="attachment-search-shell">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    id="document_template_search"
+                                    class="form-control border-start-0"
+                                    placeholder="Search document attachments by name, key, or type..."
+                                    autocomplete="off"
+                                >
+                            </div>
+
+                            <select name="document_template_ids[]" id="document_template_ids" class="form-select" multiple size="8">
+                                <?php foreach (($documentTemplates ?? []) as $doc): ?>
+                                    <?php
+                                        $selected = in_array(
+                                            (string) $doc['id'],
+                                            array_map('strval', (array) ($selectedDocs ?? [])),
+                                            true
+                                        );
+
+                                        $searchText = strtolower(trim(
+                                            ($doc['name'] ?? '') . ' ' .
+                                            ($doc['template_key'] ?? '') . ' ' .
+                                            ($doc['template_type'] ?? '')
+                                        ));
+                                    ?>
+                                    <option
+                                        value="<?= esc($doc['id']) ?>"
+                                        data-search="<?= esc($searchText) ?>"
+                                        <?= $selected ? 'selected' : '' ?>
+                                    >
+                                        <?= esc($doc['name']) ?>
+                                        <?php if (!empty($doc['template_key'])): ?>
+                                            - <?= esc($doc['template_key']) ?>
+                                        <?php endif; ?>
+                                        (<?= esc(strtoupper($doc['template_type'] ?? '')) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="meta-note mt-2">
+                            Selected documents will be generated and attached when this message is sent.
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="small text-muted mb-2">Selected Attachments</div>
+                        <div id="selectedAttachmentPreview" class="attachment-list">
+                            <span class="meta-note">No attachments selected.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modern-card">
+            <div class="section-header">
                 <h3 class="section-title">Variables</h3>
                 <div class="section-subtitle">Click or drag placeholders from the selected source</div>
             </div>
@@ -332,9 +451,16 @@
                     <div class="preview-box bg-light" id="previewSubject"></div>
                 </div>
 
-                <div>
+                <div class="mb-3">
                     <div class="small text-muted mb-1">Body</div>
                     <div class="preview-box bg-light" id="previewBody"></div>
+                </div>
+
+                <div>
+                    <div class="small text-muted mb-2">Attached Documents</div>
+                    <div id="previewDocuments" class="attachment-preview-list">
+                        <div class="text-muted">No attached documents.</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -468,6 +594,24 @@ function enableDropTarget(el) {
     });
 }
 
+function renderSelectedAttachments() {
+    const select = document.getElementById('document_template_ids');
+    const preview = document.getElementById('selectedAttachmentPreview');
+
+    if (!select || !preview) return;
+
+    const selected = Array.from(select.selectedOptions);
+
+    if (!selected.length) {
+        preview.innerHTML = '<span class="meta-note">No attachments selected.</span>';
+        return;
+    }
+
+    preview.innerHTML = selected.map(option => {
+        return `<span class="attachment-chip"><i class="bi bi-paperclip"></i>${escapeHtml(option.textContent.trim())}</span>`;
+    }).join('');
+}
+
 function buildMessagePreview() {
     const channel = document.getElementById('channel').value;
     const subject = document.getElementById('subject').value || '';
@@ -480,6 +624,19 @@ function buildMessagePreview() {
     } else {
         document.getElementById('previewSubject').textContent = subject || '—';
         document.getElementById('previewBody').innerHTML = emailBody || '<span class="text-muted">No body content</span>';
+    }
+
+    const selected = Array.from(document.getElementById('document_template_ids').selectedOptions);
+    const previewDocuments = document.getElementById('previewDocuments');
+
+    if (!selected.length) {
+        previewDocuments.innerHTML = '<div class="text-muted">No attached documents.</div>';
+    } else {
+        previewDocuments.innerHTML = selected.map(option => `
+            <div class="attachment-preview-item">
+                <div class="fw-semibold">${escapeHtml(option.textContent.trim())}</div>
+            </div>
+        `).join('');
     }
 
     const modal = new bootstrap.Modal(document.getElementById('messageTemplatePreviewModal'));
@@ -524,6 +681,15 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('channel').addEventListener('change', toggleTemplateMode);
     document.getElementById('previewMessageTemplateBtn').addEventListener('click', buildMessagePreview);
 
+    const docSelect = document.getElementById('document_template_ids');
+    if (docSelect) {
+        docSelect.addEventListener('change', renderSelectedAttachments);
+        renderSelectedAttachments();
+    }
+    const attachmentSearch = document.getElementById('document_template_search');
+    if (attachmentSearch) {
+        attachmentSearch.addEventListener('input', filterAttachmentOptions);
+    }
     ClassicEditor
         .create(document.querySelector('#body_template'))
         .then(editor => {
@@ -543,6 +709,22 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .catch(error => console.error(error));
 });
+function filterAttachmentOptions() {
+    const input = document.getElementById('document_template_search');
+    const select = document.getElementById('document_template_ids');
+
+    if (!input || !select) return;
+
+    const keyword = (input.value || '').trim().toLowerCase();
+    const options = Array.from(select.options);
+
+    options.forEach(option => {
+        const haystack = (option.getAttribute('data-search') || option.textContent || '').toLowerCase();
+        const matched = keyword === '' || haystack.includes(keyword);
+
+        option.hidden = !matched;
+    });
+}
 </script>
 
 <?= $this->endSection() ?>
