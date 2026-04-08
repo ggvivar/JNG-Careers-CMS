@@ -162,6 +162,9 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->match(['get', 'post'], 'document-templates/create', 'DocumentTemplateController::create', ['filter' => 'adminfeature:document-templates,can_add']);
         $routes->match(['get', 'post'], 'document-templates/edit/(:num)', 'DocumentTemplateController::edit/$1', ['filter' => 'adminfeature:document-templates,can_edit']);
         $routes->post('document-templates/delete/(:num)', 'DocumentTemplateController::delete/$1', ['filter' => 'adminfeature:document-templates,can_delete']);
+        //Profile
+        $routes->get('profile', 'ProfileController::index');
+        $routes->post('profile/change-password', 'ProfileController::updatePassword');
         });
     //APIs Routes
     $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {

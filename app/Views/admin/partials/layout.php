@@ -81,7 +81,7 @@ $cmsOpen    = module_has_active_feature($cmsFeatures, $path);
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title><?= esc($title ?? 'Career@Joy-Nostalg CMS') ?></title>
+<title><?= esc($title ?? 'Career@Joy-Nostalg') ?></title>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -407,7 +407,7 @@ body{
 
         <a class="navbar-brand fw-bold text-warning ms-auto ms-lg-0"
            href="<?= site_url('admin') ?>">
-            Career@Joy-Nostalg CMS
+            Career@Joy-Nostalg
         </a>
 
         <div class="d-flex align-items-center gap-2 ms-lg-auto">
@@ -415,8 +415,14 @@ body{
                 <?= esc(session()->get('admin_name') ?? 'Admin') ?>
             </span>
 
+            <a class="btn btn-sm btn-outline-light d-none d-lg-inline"
+            href="<?= site_url('admin/profile') ?>">
+                <i class="bi bi-person-circle"></i>
+                Profile
+            </a>
+
             <a class="btn btn-sm btn-light d-none d-lg-inline"
-               href="<?= site_url('admin/logout') ?>">
+            href="<?= site_url('admin/logout') ?>">
                 <i class="bi bi-box-arrow-right"></i>
                 Logout
             </a>
@@ -544,11 +550,19 @@ body{
                 <?= esc(session()->get('admin_name') ?? 'Admin') ?>
             </div>
 
-            <a class="btn btn-danger w-100"
-               href="<?= site_url('admin/logout') ?>">
-                <i class="bi bi-box-arrow-right"></i>
-                Logout
-            </a>
+            <div class="d-grid gap-2">
+                <a class="btn btn-outline-primary"
+                href="<?= site_url('admin/profile') ?>">
+                    <i class="bi bi-person-circle"></i>
+                    Profile
+                </a>
+
+                <a class="btn btn-danger"
+                href="<?= site_url('admin/logout') ?>">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </div>
         </div>
     </div>
 </div>
