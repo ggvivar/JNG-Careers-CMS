@@ -30,145 +30,273 @@ class ApplicantController extends BaseController
     }
 
     public function create()
-    {
-        helper(['form', 'filesystem']);
+{
+    helper(['form', 'filesystem', 'dropdown']);
 
-        if (strtolower($this->request->getMethod()) === 'post') {
-            $db = db_connect();
-            $db->transBegin();
+    if (strtolower($this->request->getMethod()) === 'post') {
+        $db = db_connect();
+        $db->transBegin();
 
-            try {
-                $applicantData = $this->getApplicantPostData(false);
+        try {
+            $applicantData = $this->getApplicantPostData(false);
 
-                $this->applicantModel->insert($applicantData);
-                $applicantId = (int) $this->applicantModel->getInsertID();
+            $this->applicantModel->insert($applicantData);
+            $applicantId = (int) $this->applicantModel->getInsertID();
 
-                $this->saveEducationRows($applicantId);
-                $this->saveJobHistoryRows($applicantId);
-                $this->saveEmploymentDetails($applicantId);
-                // $this->saveResumeUpload($applicantId);
+            $this->saveEducationRows($applicantId);
+            $this->saveJobHistoryRows($applicantId);
+            $this->saveEmploymentDetails($applicantId);
 
-                if ($db->transStatus() === false) {
-                    throw new \RuntimeException('Failed to create applicant.');
-                }
-
-                $db->transCommit();
-
-                if ($this->request->isAJAX()) {
-                    return $this->response->setJSON([
-                        'success'      => true,
-                        'message'      => 'Applicant created successfully.',
-                        'applicant_id' => $applicantId,
-                        'edit_url'     => site_url('admin/applicants/edit/' . $applicantId),
-                        'view_url'     => site_url('admin/applicants/' . $applicantId),
-                    ]);
-                }
-
-                return redirect()->to('/admin/applicants/' . $applicantId)
-                    ->with('success', 'Applicant created.');
-            } catch (\Throwable $e) {
-                $db->transRollback();
-
-                if ($this->request->isAJAX()) {
-                    return $this->response->setStatusCode(500)->setJSON([
-                        'success' => false,
-                        'message' => $e->getMessage(),
-                    ]);
-                }
-
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', $e->getMessage());
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Failed to create applicant.');
             }
-        }
 
-        return view('admin/applicants/form', [
-            'mode'       => 'create',
-            'applicant'  => [],
-            'educations' => [],
-            'jobHistory' => [],
-            'documents'  => [],
-            'employment' => [],
-        ]);
-    }
+            $db->transCommit();
 
-    public function edit($id)
-    {
-        helper(['form', 'filesystem']);
-
-        $id = (int) $id;
-        $applicant = $this->applicantModel->where('date_deleted', null)->find($id);
-
-        if (! $applicant) {
             if ($this->request->isAJAX()) {
-                return $this->response->setStatusCode(404)->setJSON([
-                    'success' => false,
-                    'message' => 'Applicant not found.',
+                return $this->response->setJSON([
+                    'success'      => true,
+                    'message'      => 'Applicant created successfully.',
+                    'applicant_id' => $applicantId,
+                    'edit_url'     => site_url('admin/applicants/edit/' . $applicantId),
+                    'view_url'     => site_url('admin/applicants/' . $applicantId),
                 ]);
             }
 
-            return redirect()->to('/admin/applicants')->with('error', 'Applicant not found.');
-        }
+            return redirect()->to('/admin/applicants/' . $applicantId)
+                ->with('success', 'Applicant created.');
+        } catch (\Throwable $e) {
+            $db->transRollback();
 
-        if (strtolower($this->request->getMethod()) === 'post') {
-            $db = db_connect();
-            $db->transBegin();
-
-            try {
-                $this->applicantModel->update($id, $this->getApplicantPostData(true));
-
-                $this->replaceEducationRows($id);
-                $this->replaceJobHistoryRows($id);
-                $this->saveEmploymentDetails($id);
-                // $this->saveResumeUpload($id);
-
-                if ($db->transStatus() === false) {
-                    throw new \RuntimeException('Failed to update applicant.');
-                }
-
-                $db->transCommit();
-
-                if ($this->request->isAJAX()) {
-                    return $this->response->setJSON([
-                        'success'      => true,
-                        'message'      => 'Applicant updated successfully.',
-                        'applicant_id' => $id,
-                        'view_url'     => site_url('admin/applicants/' . $id),
-                    ]);
-                }
-
-                return redirect()->to('/admin/applicants/' . $id)
-                    ->with('success', 'Applicant updated.');
-            } catch (\Throwable $e) {
-                $db->transRollback();
-
-                if ($this->request->isAJAX()) {
-                    return $this->response->setStatusCode(500)->setJSON([
-                        'success' => false,
-                        'message' => $e->getMessage(),
-                    ]);
-                }
-
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', $e->getMessage());
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ]);
             }
-        }
 
-        $educations = $this->educationModel->getByApplicantId($id);
-        $jobHistory = $this->jobHistoryModel->getByApplicantId($id);
-        $documents  = $this->documentAttachmentModel->getByApplicantId($id);
-        $employment = $this->employmentDetailModel->getByApplicantId($id);
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
 
         return view('admin/applicants/form', [
-            'mode'       => 'edit',
-            'applicant'  => $applicant,
-            'educations' => $educations,
-            'jobHistory' => $jobHistory,
-            'documents'  => $documents,
-            'employment' => $employment ?? [],
+            'mode'                => 'create',
+            'applicant'           => [],
+            'educations'          => [],
+            'jobHistory'          => [],
+            'documents'           => [],
+            'employment'          => [],
+            'genderOptions'       => dd_common_defaults('Gender'),
+            'civilStatusOptions'  => dd_common_defaults('Civil Status'),
+            'documentTypeOptions' => dd_common_defaults('Document Type'),
         ]);
     }
+
+public function edit($id)
+{
+    helper(['form', 'filesystem', 'dropdown']);
+
+    $id = (int) $id;
+    $applicant = $this->applicantModel->where('date_deleted', null)->find($id);
+
+    if (! $applicant) {
+        if ($this->request->isAJAX()) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => 'Applicant not found.',
+            ]);
+        }
+
+        return redirect()->to('/admin/applicants')->with('error', 'Applicant not found.');
+    }
+
+    if (strtolower($this->request->getMethod()) === 'post') {
+        $db = db_connect();
+        $db->transBegin();
+
+        try {
+            $this->applicantModel->update($id, $this->getApplicantPostData(true));
+
+            $this->replaceEducationRows($id);
+            $this->replaceJobHistoryRows($id);
+            $this->saveEmploymentDetails($id);
+
+            if ($db->transStatus() === false) {
+                throw new \RuntimeException('Failed to update applicant.');
+            }
+
+            $db->transCommit();
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success'      => true,
+                    'message'      => 'Applicant updated successfully.',
+                    'applicant_id' => $id,
+                    'view_url'     => site_url('admin/applicants/' . $id),
+                ]);
+            }
+
+            return redirect()->to('/admin/applicants/' . $id)
+                ->with('success', 'Applicant updated.');
+        } catch (\Throwable $e) {
+            $db->transRollback();
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(500)->setJSON([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    $educations = $this->educationModel->getByApplicantId($id);
+    $jobHistory = $this->jobHistoryModel->getByApplicantId($id);
+    $documents  = $this->documentAttachmentModel->getByApplicantId($id);
+    $employment = $this->employmentDetailModel->getByApplicantId($id);
+
+        return view('admin/applicants/form', [
+            'mode'                => 'edit',
+            'applicant'           => $applicant,
+            'educations'          => $educations,
+            'jobHistory'          => $jobHistory,
+            'documents'           => $documents,
+            'employment'          => $employment ?? [],
+            'genderOptions'       => dd_common_defaults('Gender'),
+            'civilStatusOptions'  => dd_common_defaults('Civil Status'),
+            'documentTypeOptions' => dd_common_defaults('Document Type'),
+        ]);
+    }
+
+    public function uploadDocument($applicantId)
+{
+    $applicantId = (int) $applicantId;
+
+    if (! $this->request->isAJAX()) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'success' => false,
+            'message' => 'Invalid request.',
+        ]);
+    }
+
+    $applicant = $this->applicantModel
+        ->where('id', $applicantId)
+        ->where('date_deleted', null)
+        ->first();
+
+    if (! $applicant) {
+        return $this->response->setStatusCode(404)->setJSON([
+            'success' => false,
+            'message' => 'Applicant not found.',
+        ]);
+    }
+
+    $documentType = trim((string) $this->request->getPost('document_type'));
+    $remarks      = trim((string) $this->request->getPost('remarks'));
+    $file         = $this->request->getFile('document_file');
+
+    if ($documentType === '') {
+        return $this->response->setStatusCode(422)->setJSON([
+            'success' => false,
+            'message' => 'Document type is required.',
+        ]);
+    }
+
+    if (! $file || ! $file->isValid()) {
+        return $this->response->setStatusCode(422)->setJSON([
+            'success' => false,
+            'message' => 'Please select a valid file.',
+        ]);
+    }
+
+    if ($file->hasMoved()) {
+        return $this->response->setStatusCode(422)->setJSON([
+            'success' => false,
+            'message' => 'File upload is no longer available.',
+        ]);
+    }
+
+    $uploadPath = FCPATH . 'uploads/applicants/' . $applicantId . '/documents';
+
+    if (! is_dir($uploadPath)) {
+        mkdir($uploadPath, 0777, true);
+    }
+
+    // capture metadata BEFORE move
+    $originalName = $file->getClientName();
+    $extension    = strtolower((string) $file->getClientExtension());
+    $size         = (int) $file->getSize();
+    $newName      = $file->getRandomName();
+
+    $file->move($uploadPath, $newName);
+
+    $relativePath = 'uploads/applicants/' . $applicantId . '/documents/' . $newName;
+
+    $this->documentAttachmentModel->insert([
+        'applicant_id'  => $applicantId,
+        'document_type' => $documentType,
+        'file_name'     => $originalName,
+        'file_path'     => $relativePath,
+        'file_ext'      => $extension,
+        'file_size'     => $size,
+        'remarks'       => $remarks !== '' ? $remarks : null,
+        'date_created'  => date('Y-m-d H:i:s'),
+    ]);
+
+    $id = (int) $this->documentAttachmentModel->getInsertID();
+
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => 'Document uploaded successfully.',
+        'row' => [
+            'id'            => $id,
+            'document_type' => $documentType,
+            'file_name'     => $originalName,
+            'remarks'       => $remarks,
+        ],
+        'url' => base_url($relativePath),
+    ]);
+}
+
+   public function deleteDocument($id)
+{
+    $id = (int) $id;
+
+    if (! $this->request->isAJAX()) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'success' => false,
+            'message' => 'Invalid request.',
+        ]);
+    }
+
+    $document = $this->documentAttachmentModel
+        ->where('id', $id)
+        ->where('date_deleted', null)
+        ->first();
+
+    if (! $document) {
+        return $this->response->setStatusCode(404)->setJSON([
+            'success' => false,
+            'message' => 'Document not found.',
+        ]);
+    }
+
+    $this->documentAttachmentModel->update($id, [
+        'date_deleted' => date('Y-m-d H:i:s'),
+        'date_updated' => date('Y-m-d H:i:s'),
+    ]);
+
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => 'Document deleted successfully.',
+    ]);
+}
 
     protected function getApplicantPostData(bool $isEdit = false): array
     {
@@ -445,6 +573,8 @@ class ApplicantController extends BaseController
 
     public function view($id)
     {
+        helper(['dropdown']);
+        
         $id = (int) $id;
 
         $applicant = $this->applicantModel->getApplicantById($id);
@@ -466,6 +596,7 @@ class ApplicantController extends BaseController
             'applications' => $applications,
             'documents'    => $documents,
             'employment'   => $employment ?? [],
+            'documentTypeOptions' => dd_common_defaults('Document Type'),
         ]);
     }
 
@@ -566,20 +697,44 @@ class ApplicantController extends BaseController
     }
 
     public function updateInlineProfile($id)
-    {
-        $id = (int) $id;
-
-        $this->applicantModel->update($id, [
-            'phone'        => trim((string) $this->request->getPost('phone')) ?: null,
-            'email'        => trim((string) $this->request->getPost('email')) ?: null,
-            'address'      => trim((string) $this->request->getPost('address')) ?: null,
-            'city'         => trim((string) $this->request->getPost('city')) ?: null,
-            'province'     => trim((string) $this->request->getPost('province')) ?: null,
-            'date_updated' => date('Y-m-d H:i:s'),
+{
+    $id = (int) $id;
+    if (! $this->request->isAJAX()) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'success' => false,
+            'message' => 'Invalid request.',
         ]);
-
-        return $this->response->setJSON(['success' => true]);
     }
+
+    $applicant = $this->applicantModel
+        ->where('id', $id)
+        ->where('date_deleted', null)
+        ->first();
+
+    if (! $applicant) {
+        return $this->response->setStatusCode(404)->setJSON([
+            'success' => false,
+            'message' => 'Applicant not found.',
+        ]);
+    }
+
+    $data = [
+        'phone'        => trim((string) $this->request->getPost('phone')) ?: null,
+        'email'        => trim((string) $this->request->getPost('email')) ?: null,
+        'address'      => trim((string) $this->request->getPost('address')) ?: null,
+        'city'         => trim((string) $this->request->getPost('city')) ?: null,
+        'province'     => trim((string) $this->request->getPost('province')) ?: null,
+        'date_updated' => date('Y-m-d H:i:s'),
+    ];
+
+    $this->applicantModel->update($id, $data);
+
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => 'Profile updated successfully.',
+        'row'     => $data,
+    ]);
+}
 
     public function saveEducationInline($applicantId)
     {
@@ -620,15 +775,36 @@ class ApplicantController extends BaseController
     }
 
     public function deleteEducationInline($applicantId)
-    {
-        $id = (int) $this->request->getPost('id');
+{
+    $applicantId = (int) $applicantId;
+    $id = (int) $this->request->getPost('id');
 
-        if ($id > 0) {
-            $this->educationModel->delete($id);
-        }
-
-        return $this->response->setJSON(['success' => true]);
+    if ($id <= 0) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid education id.',
+        ]);
     }
+
+    $row = $this->educationModel
+        ->where('id', $id)
+        ->where('applicant_id', $applicantId)
+        ->first();
+
+    if (! $row) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Education record not found.',
+        ]);
+    }
+
+    $this->educationModel->delete($id);
+
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => 'Education deleted successfully.',
+    ]);
+}
 
     public function saveJobHistoryInline($applicantId)
     {
@@ -678,18 +854,46 @@ class ApplicantController extends BaseController
     }
 
     public function deleteJobHistoryInline($applicantId)
-    {
-        $id = (int) $this->request->getPost('id');
+{
+    $applicantId = (int) $applicantId;
+    $id = (int) $this->request->getPost('id');
 
-        if ($id > 0) {
-            $this->jobHistoryModel->delete($id);
-        }
-
-        return $this->response->setJSON(['success' => true]);
+    if ($id <= 0) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid job history id.',
+        ]);
     }
+
+    $row = $this->jobHistoryModel
+        ->where('id', $id)
+        ->where('applicant_id', $applicantId)
+        ->first();
+
+    if (! $row) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Job history record not found.',
+        ]);
+    }
+
+    $this->jobHistoryModel->delete($id);
+
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => 'Job history deleted successfully.',
+    ]);
+}
     public function uploadDocumentInline($applicantId)
 {
     $applicantId = (int) $applicantId;
+
+    if (! $this->request->isAJAX()) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'success' => false,
+            'message' => 'Invalid request.',
+        ]);
+    }
 
     $applicant = $this->applicantModel->getApplicantById($applicantId);
     if (! $applicant) {
@@ -710,10 +914,17 @@ class ApplicantController extends BaseController
         ]);
     }
 
-    if (! $file || ! $file->isValid() || $file->hasMoved()) {
+    if (! $file || ! $file->isValid()) {
         return $this->response->setJSON([
             'success' => false,
             'message' => 'Please select a valid file.',
+        ]);
+    }
+
+    if ($file->hasMoved()) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'File upload is no longer available.',
         ]);
     }
 
@@ -722,16 +933,21 @@ class ApplicantController extends BaseController
         mkdir($uploadPath, 0777, true);
     }
 
-    $newName = $file->getRandomName();
+    // capture metadata BEFORE move
+    $originalName = $file->getClientName();
+    $extension    = strtolower((string) $file->getClientExtension());
+    $size         = (int) $file->getSize();
+    $newName      = $file->getRandomName();
+
     $file->move($uploadPath, $newName);
 
     $insertData = [
         'applicant_id'  => $applicantId,
         'document_type' => $documentType,
-        'file_name'     => $file->getClientName(),
+        'file_name'     => $originalName,
         'file_path'     => 'uploads/applicants/' . $applicantId . '/documents/' . $newName,
-        'file_ext'      => $file->getExtension(),
-        'file_size'     => $file->getSize(),
+        'file_ext'      => $extension,
+        'file_size'     => $size,
         'remarks'       => $remarks !== '' ? $remarks : null,
         'date_created'  => date('Y-m-d H:i:s'),
     ];
@@ -781,6 +997,76 @@ public function deleteDocumentInline($applicantId)
     return $this->response->setJSON([
         'success' => true,
         'message' => 'Document deleted successfully.',
+    ]);
+}
+public function saveEmploymentInline($applicantId)
+{
+    $applicantId = (int) $applicantId;
+
+    if (! $this->request->isAJAX()) {
+        return $this->response->setStatusCode(400)->setJSON([
+            'success' => false,
+            'message' => 'Invalid request.',
+        ]);
+    }
+
+    $existing = $this->employmentDetailModel->getByApplicantId($applicantId);
+
+    $data = [
+        'applicant_id'     => $applicantId,
+        'employee_no'      => trim((string) $this->request->getPost('employee_no')) ?: null,
+        'position'         => trim((string) $this->request->getPost('position')) ?: null,
+        'department'       => trim((string) $this->request->getPost('department')) ?: null,
+        'employment_type'  => trim((string) $this->request->getPost('employment_type')) ?: null,
+        'date_hired'       => $this->request->getPost('date_hired') ?: null,
+        'date_regularized' => $this->request->getPost('date_regularized') ?: null,
+        'date_separated'   => $this->request->getPost('date_separated') ?: null,
+        'salary'           => trim((string) $this->request->getPost('salary')) ?: null,
+        'status'           => trim((string) $this->request->getPost('status')) ?: null,
+        'remarks'          => trim((string) $this->request->getPost('remarks')) ?: null,
+        'date_updated'     => date('Y-m-d H:i:s'),
+    ];
+
+    $hasEmploymentData =
+        $data['employee_no'] !== null ||
+        $data['position'] !== null ||
+        $data['department'] !== null ||
+        $data['employment_type'] !== null ||
+        $data['date_hired'] !== null ||
+        $data['date_regularized'] !== null ||
+        $data['date_separated'] !== null ||
+        $data['salary'] !== null ||
+        $data['status'] !== null ||
+        $data['remarks'] !== null;
+
+    if (! $hasEmploymentData) {
+        if ($existing) {
+            $this->employmentDetailModel->delete($existing['id']);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Employment details cleared successfully.',
+            'row'     => null,
+        ]);
+    }
+
+    if ($existing) {
+        $this->employmentDetailModel->update($existing['id'], $data);
+        $id = (int) $existing['id'];
+    } else {
+        $data['date_created'] = date('Y-m-d H:i:s');
+        unset($data['date_updated']);
+        $this->employmentDetailModel->insert($data);
+        $id = (int) $this->employmentDetailModel->getInsertID();
+    }
+
+    $row = $this->employmentDetailModel->find($id);
+
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => 'Employment details saved successfully.',
+        'row'     => $row,
     ]);
 }
 }

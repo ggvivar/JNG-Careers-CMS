@@ -16,49 +16,43 @@ class CommonDefaultController extends BaseController
     }
 
     public function index()
-    {
-        $q     = trim((string) $this->request->getGet('q'));
-        $group = trim((string) $this->request->getGet('group'));
-        $page  = max(1, (int) ($this->request->getGet('page') ?? 1));
-        $perPage = 10;
+{
+    $q     = trim((string) $this->request->getGet('q'));
+    $group = trim((string) $this->request->getGet('group'));
 
-        $builder = $this->model
-            ->select('*')
-            ->where('date_deleted', null);
+    $builder = $this->model
+        ->select('*')
+        ->where('date_deleted', null);
 
-        // Search
-        if ($q !== '') {
-            $builder->groupStart()
-                ->like('key1', $q)
-                ->orLike('key2', $q)
-                ->orLike('key3', $q)
-                ->orLike('key4', $q)
-                ->orLike('key5', $q)
-                ->orLike('value', $q)
-                ->orLike('definition', $q)
-                ->groupEnd();
-        }
-
-        // Filter by group/category
-        if ($group !== '') {
-            $builder->where('key1', $group);
-        }
-
-        $defaults = $builder
-            ->orderBy('key1', 'ASC')
-            ->orderBy('value', 'ASC')
-            ->paginate($perPage, 'default', $page);
-
-        $pager = $this->model->pager;
-
-        return view('admin/common_defaults/index', [
-            'defaults'        => $defaults,
-            'searchQuery'     => $q,
-            'currentGroup'    => $group,
-            'groupOptions'    => ['' => 'All Groups'] + dd_common_default_groups(),
-            'paginationLinks' => $pager->only(['q', 'group'])->links('default'),
-        ]);
+    if ($q !== '') {
+        $builder->groupStart()
+            ->like('key1', $q)
+            ->orLike('key2', $q)
+            ->orLike('key3', $q)
+            ->orLike('key4', $q)
+            ->orLike('key5', $q)
+            ->orLike('value', $q)
+            ->orLike('definition', $q)
+            ->groupEnd();
     }
+
+    if ($group !== '') {
+        $builder->where('key1', $group);
+    }
+
+    $defaults = $builder
+        ->orderBy('key1', 'ASC')
+        ->orderBy('value', 'ASC')
+        ->findAll();
+
+    return view('admin/common_defaults/index', [
+        'defaults'        => $defaults,
+        'searchQuery'     => $q,
+        'currentGroup'    => $group,
+        'groupOptions'    => ['' => 'All Groups'] + dd_common_default_groups(),
+        'paginationLinks' => '',
+    ]);
+}
 
     public function create()
     {
@@ -175,13 +169,13 @@ class CommonDefaultController extends BaseController
     $id = (int) ($this->request->getPost('id') ?? 0);
 
     $data = [
-        'key1'       => trim((string) $this->request->getPost('key1')) ?: null,
-        'key2'       => trim((string) $this->request->getPost('key2')) ?: null,
-        'key3'       => trim((string) $this->request->getPost('key3')) ?: null,
-        'key4'       => trim((string) $this->request->getPost('key4')) ?: null,
-        'key5'       => trim((string) $this->request->getPost('key5')) ?: null,
-        'value'      => trim((string) $this->request->getPost('value')),
-        'definition' => trim((string) $this->request->getPost('definition')) ?: null,
+        'key1'         => trim((string) $this->request->getPost('key1')) ?: null,
+        'key2'         => trim((string) $this->request->getPost('key2')) ?: null,
+        'key3'         => trim((string) $this->request->getPost('key3')) ?: null,
+        'key4'         => trim((string) $this->request->getPost('key4')) ?: null,
+        'key5'         => trim((string) $this->request->getPost('key5')) ?: null,
+        'value'        => trim((string) $this->request->getPost('value')),
+        'definition'   => trim((string) $this->request->getPost('definition')) ?: null,
         'date_updated' => date('Y-m-d H:i:s'),
     ];
 
@@ -192,8 +186,14 @@ class CommonDefaultController extends BaseController
         ]);
     }
 
+    $duplicateBuilder = $this->model
+        ->where('date_deleted', null)
+        ->where('key1', $data['key1'])
+        ->where('value', $data['value']);
+
     if ($id > 0) {
         $existing = $this->model->where('date_deleted', null)->find($id);
+
         if (! $existing) {
             return $this->response->setStatusCode(404)->setJSON([
                 'status'  => 'error',
@@ -201,10 +201,35 @@ class CommonDefaultController extends BaseController
             ]);
         }
 
-        $this->model->update($id, $data);
+        $duplicateBuilder->where('id !=', $id);
+    }
+
+    $duplicate = $duplicateBuilder->countAllResults();
+
+    if ($duplicate > 0) {
+        return $this->response->setStatusCode(409)->setJSON([
+            'status'  => 'error',
+            'message' => 'Duplicate value already exists in this group.',
+        ]);
+    }
+
+    if ($id > 0) {
+        if (! $this->model->update($id, $data)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status'  => 'error',
+                'message' => implode(' ', $this->model->errors()),
+            ]);
+        }
     } else {
         $data['date_created'] = date('Y-m-d H:i:s');
-        $this->model->insert($data);
+
+        if (! $this->model->insert($data)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status'  => 'error',
+                'message' => implode(' ', $this->model->errors()),
+            ]);
+        }
+
         $id = (int) $this->model->getInsertID();
     }
 

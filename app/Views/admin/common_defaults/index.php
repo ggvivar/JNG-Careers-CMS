@@ -132,8 +132,18 @@ ksort($groupMap);
 </div>
 
 <script>
-const allData = <?= json_encode(array_values($defaults ?? []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
-let currentGroup = null;
+const allData = <?= json_encode(array_values($defaults ?? []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>.map(row => ({
+    ...row,
+    key1: String(row.key1 ?? '').trim(),
+    key2: String(row.key2 ?? ''),
+    key3: String(row.key3 ?? ''),
+    key4: String(row.key4 ?? ''),
+    key5: String(row.key5 ?? ''),
+    value: String(row.value ?? ''),
+    definition: String(row.definition ?? '')
+}));
+
+let currentGroup = <?= json_encode($currentGroup ?? '') ?> || null;
 
 function escapeHtml(str) {
     return String(str ?? '')
@@ -162,17 +172,24 @@ function rowHtml(row = {}) {
     `;
 }
 
+function getGroups() {
+    return [...new Set(
+        allData
+            .filter(r => !r.date_deleted && String(r.key1 ?? '').trim() !== '')
+            .map(r => String(r.key1 ?? '').trim())
+    )].sort((a, b) => a.localeCompare(b));
+}
+
 function filteredRows() {
-    return allData.filter(row => (row.key1 || '') === currentGroup && !row.date_deleted);
+    return allData.filter(row =>
+        String(row.key1 ?? '').trim() === String(currentGroup ?? '').trim() &&
+        !row.date_deleted
+    );
 }
 
 function renderTabs(activeGroup = null) {
     const tabs = document.getElementById('groupTabs');
-    const groups = [...new Set(
-        allData
-            .filter(r => !r.date_deleted && (r.key1 || '').trim() !== '')
-            .map(r => r.key1.trim())
-    )].sort((a, b) => a.localeCompare(b));
+    const groups = getGroups();
 
     tabs.innerHTML = '';
 
@@ -190,20 +207,21 @@ function renderTabs(activeGroup = null) {
         tabs.appendChild(btn);
     });
 
-    if (!currentGroup && groups.length) {
+    if ((!currentGroup || !groups.includes(currentGroup)) && groups.length) {
         currentGroup = groups[0];
-        renderTabs(currentGroup);
     }
 }
 
 function renderTable() {
     const tbody = document.querySelector('#defaultTable tbody');
+
     if (!currentGroup) {
         tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No group selected.</td></tr>`;
         return;
     }
 
     const rows = filteredRows();
+
     if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No values yet for <strong>${escapeHtml(currentGroup)}</strong>.</td></tr>`;
         return;
@@ -237,7 +255,7 @@ document.getElementById('btnNewGroup').addEventListener('click', async () => {
             group: group.trim()
         });
 
-        currentGroup = res.group;
+        currentGroup = res.group.trim();
         renderTabs(currentGroup);
         renderTable();
     } catch (err) {
@@ -256,17 +274,17 @@ document.getElementById('btnRenameGroup').addEventListener('click', async () => 
 
     try {
         const res = await postForm("<?= site_url('admin/common-defaults/rename-group') ?>", {
-            old_group: currentGroup,
+            old_group: currentGroup.trim(),
             new_group: newGroup.trim()
         });
 
         allData.forEach(row => {
-            if ((row.key1 || '') === currentGroup) {
-                row.key1 = res.group;
+            if (String(row.key1 ?? '').trim() === String(currentGroup ?? '').trim()) {
+                row.key1 = res.group.trim();
             }
         });
 
-        currentGroup = res.group;
+        currentGroup = res.group.trim();
         renderTabs(currentGroup);
         renderTable();
     } catch (err) {
@@ -284,11 +302,11 @@ document.getElementById('btnDeleteGroup').addEventListener('click', async () => 
 
     try {
         await postForm("<?= site_url('admin/common-defaults/delete-group') ?>", {
-            group: currentGroup
+            group: currentGroup.trim()
         });
 
         for (let i = allData.length - 1; i >= 0; i--) {
-            if ((allData[i].key1 || '') === currentGroup) {
+            if (String(allData[i].key1 ?? '').trim() === String(currentGroup ?? '').trim()) {
                 allData.splice(i, 1);
             }
         }
@@ -321,7 +339,7 @@ document.addEventListener('change', async function(e) {
 
     const payload = {
         id: tr.dataset.id || '',
-        key1: currentGroup,
+        key1: String(currentGroup ?? '').trim(),
         value: '',
         key2: '',
         key3: '',
@@ -334,9 +352,7 @@ document.addEventListener('change', async function(e) {
         payload[input.dataset.field] = input.value;
     });
 
-    if (!payload.value.trim()) {
-        return;
-    }
+    if (!payload.value.trim()) return;
 
     try {
         const res = await postForm("<?= site_url('admin/common-defaults/save-inline') ?>", payload);
@@ -359,6 +375,9 @@ document.addEventListener('change', async function(e) {
         } else {
             allData.push(rowData);
         }
+
+        renderTabs(currentGroup);
+        renderTable();
     } catch (err) {
         alert(err.message || 'Unable to save row.');
     }
@@ -382,7 +401,7 @@ document.addEventListener('click', async function(e) {
     if (!confirm('Delete this value?')) return;
 
     try {
-        await postForm("<?= site_url('admin/common-defaults/delete-inline/' ) ?>" + id, {});
+        await postForm("<?= site_url('admin/common-defaults/delete-inline/') ?>" + id, {});
         const index = allData.findIndex(r => String(r.id) === String(id));
         if (index >= 0) allData.splice(index, 1);
         tr.remove();
@@ -390,12 +409,14 @@ document.addEventListener('click', async function(e) {
         if (!document.querySelector('#defaultTable tbody tr')) {
             renderTable();
         }
+
+        renderTabs(currentGroup);
     } catch (err) {
         alert(err.message || 'Unable to delete row.');
     }
 });
 
-renderTabs();
+renderTabs(currentGroup);
 renderTable();
 </script>
 

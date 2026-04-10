@@ -324,7 +324,7 @@
 </style>
 
 <?php
-$fullName = trim(($applicant['firstname'] ?? '') . ' ' . ($applicant['lastname'] ?? ''));
+$fullName = trim(($applicant['firstname'] ?? '') . ' ' . ($applicant['middlename'] ?? ''). ' ' . ($applicant['lastname'] ?? ''));
 
 $statusClass = function ($status) {
     $status = strtolower(trim((string) $status));
@@ -340,10 +340,10 @@ $statusClass = function ($status) {
 <div class="applicant-view-wrap">
   <div class="applicant-hero">
     <div>
-      <h1 class="applicant-name"><?= esc($fullName !== '' ? $fullName : 'Unnamed Applicant') ?></h1>
-      <div class="applicant-email"><?= esc($applicant['email'] ?? '-') ?></div>
+      <h1 class="applicant-name" id="heroName"><?= esc($fullName !== '' ? $fullName : 'Unnamed Applicant') ?></h1>
+      <div class="applicant-email" id="heroEmail"><?= esc($applicant['email'] ?? '-') ?></div>
+      <!-- <pre><?php print_r($applicant); ?></pre> -->
     </div>
-
     <div class="d-flex gap-2 flex-wrap">
       <?php if (function_exists('rbac_can_feature') && rbac_can_feature('applicants', 'can_edit')): ?>
         <a class="btn btn-primary" href="<?= site_url('admin/applicants/edit/' . $applicant['id']) ?>">
@@ -410,27 +410,27 @@ $statusClass = function ($status) {
               <div class="profile-grid">
                 <div class="profile-item">
                   <div class="profile-label">Phone</div>
-                  <div class="profile-value"><?= esc($applicant['phone'] ?? '-') ?></div>
+                  <div class="profile-value" data-profile="phone"><?= esc($applicant['phone'] ?? '-') ?></div>
                 </div>
 
                 <div class="profile-item">
                   <div class="profile-label">Email</div>
-                  <div class="profile-value"><?= esc($applicant['email'] ?? '-') ?></div>
+                  <div class="profile-value" data-profile="email"><?= esc($applicant['email'] ?? '-') ?></div>
                 </div>
 
                 <div class="profile-item">
                   <div class="profile-label">Address</div>
-                  <div class="profile-value"><?= esc($applicant['address'] ?? '-') ?></div>
+                  <div class="profile-value" data-profile="address"><?= esc($applicant['address'] ?? '-') ?></div>
                 </div>
 
                 <div class="profile-item">
                   <div class="profile-label">City</div>
-                  <div class="profile-value"><?= esc($applicant['city'] ?? '-') ?></div>
+                  <div class="profile-value" data-profile="city"><?= esc($applicant['city'] ?? '-') ?></div>
                 </div>
 
                 <div class="profile-item">
                   <div class="profile-label">Province</div>
-                  <div class="profile-value"><?= esc($applicant['province'] ?? '-') ?></div>
+                  <div class="profile-value" data-profile="province"><?= esc($applicant['province'] ?? '-') ?></div>
                 </div>
               </div>
             </div>
@@ -443,7 +443,7 @@ $statusClass = function ($status) {
       <div class="applicant-card">
         <div class="toggle-card-header">
           <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#applicationsSection" aria-expanded="true" aria-controls="applicationsSection">
-            <span>Applications</span>
+            <span>Application History</span>
             <i class="bi bi-chevron-down toggle-icon"></i>
           </button>
         </div>
@@ -456,13 +456,14 @@ $statusClass = function ($status) {
               <div class="application-list">
                 <?php foreach ($applications as $application): ?>
                   <?php
+                    $applicationId = $application['id']??'';
                     $statusName = $application['status_name'] ?? '-';
                     $jobName = $application['job_name'] ?? '-';
                     $appliedAt = $application['applied_at'] ?? null;
                   ?>
                   <div class="application-item">
                     <div>
-                      <div class="application-job"><?= esc($jobName) ?></div>
+                      <div class="application-job"><a href="../applications/<?= esc($applicationId) ?>"><?= esc($jobName) ?></a></div>
                       <div class="application-meta">Applied: <?= esc($appliedAt ?: '-') ?></div>
                     </div>
 
@@ -486,7 +487,7 @@ $statusClass = function ($status) {
             <i class="bi bi-chevron-down toggle-icon"></i>
           </button>
         </div>
-
+                  
         <div id="personalInfoSection" class="collapse">
           <div class="card-body">
             <div class="profile-grid">
@@ -494,7 +495,10 @@ $statusClass = function ($status) {
                 <div class="profile-label">First Name</div>
                 <div class="profile-value"><?= esc($applicant['firstname'] ?? '-') ?></div>
               </div>
-
+              <div class="profile-item">
+                <div class="profile-label">Middle Name</div>
+                <div class="profile-value"><?= esc($applicant['middlename'] ?? '-') ?></div>
+              </div>
               <div class="profile-item">
                 <div class="profile-label">Last Name</div>
                 <div class="profile-value"><?= esc($applicant['lastname'] ?? '-') ?></div>
@@ -503,6 +507,24 @@ $statusClass = function ($status) {
               <div class="profile-item">
                 <div class="profile-label">Full Name</div>
                 <div class="profile-value"><?= esc($fullName !== '' ? $fullName : '-') ?></div>
+              </div>
+
+              <div class="profile-item">
+                <div class="profile-label">Gender</div>
+                <div class="profile-value"><?= esc($applicant['gender'] ?? '-') ?></div>
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Civil Status</div>
+                <div class="profile-value"><?= esc($applicant['civil_status'] ?? '-') ?></div>
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Nationality</div>
+                <div class="profile-value"><?= esc($applicant['nationality'] ?? '-') ?></div>
+              </div>
+              
+              <div class="profile-item">
+                <div class="profile-label">Birth Date</div>
+                <div class="profile-value"><?= esc($applicant['birthdate'] ?? '-') ?></div>
               </div>
             </div>
           </div>
@@ -519,42 +541,94 @@ $statusClass = function ($status) {
     </div>
 
     <div id="documentsSection" class="collapse">
-      <div class="card-body">
-        <?php if (empty($documents)): ?>
-          <div class="empty-state">No document records.</div>
-        <?php else: ?>
-          <div class="application-list">
-            <?php foreach ($documents as $doc): ?>
-              <div class="application-item">
-                <div class="flex-grow-1">
-                  <div class="application-job"><?= esc($doc['document_type'] ?? 'Document') ?></div>
-                  <div class="application-meta"><?= esc($doc['file_name'] ?? '-') ?></div>
-
-                  <?php if (!empty($doc['remarks'])): ?>
-                    <div class="application-meta"><?= esc($doc['remarks']) ?></div>
-                  <?php endif; ?>
-
-                  <?php if (!empty($doc['file_ext']) || !empty($doc['file_size'])): ?>
-                    <div class="application-meta">
-                      <?= !empty($doc['file_ext']) ? strtoupper(esc($doc['file_ext'])) : '' ?>
-                      <?= !empty($doc['file_ext']) && !empty($doc['file_size']) ? ' • ' : '' ?>
-                      <?= !empty($doc['file_size']) ? number_format(((float)$doc['file_size']) / 1024, 2) . ' KB' : '' ?>
-                    </div>
-                  <?php endif; ?>
-                </div>
-
-                <div class="inline-edit-actions">
-                  <a class="resume-chip" href="<?= base_url($doc['file_path']) ?>" target="_blank">
-                    <i class="bi bi-file-earmark-text"></i>
-                    View File
-                  </a>
-                </div>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        <?php endif; ?>
-      </div>
+  <div class="card-body">
+    <div class="section-toolbar">
+      <div class="text-muted small">Upload and manage applicant documents from this page.</div>
+      <?php if (!empty($applicant['id'])): ?>
+        <button type="button" class="btn btn-primary btn-sm" onclick="toggleDocumentUpload(true)">
+          <i class="bi bi-upload me-1"></i> Upload Document
+        </button>
+      <?php endif; ?>
     </div>
+
+    <?php if (!empty($applicant['id'])): ?>
+      <div id="documentUploadWrap" class="d-none mb-4">
+        <div class="applicant-card" style="box-shadow:none;border-style:dashed;">
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label">Document Type</label>
+                <select id="view_document_type" class="form-select">
+                  <option value="">Select document type</option>
+                  <?php foreach (($documentTypeOptions ?? []) as $value => $label): ?>
+                    <option value="<?= esc($value) ?>"><?= esc($label) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Remarks</label>
+                <input type="text" id="view_document_remarks" class="form-control" placeholder="Optional remarks">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">File</label>
+                <input type="file" id="view_document_file" class="form-control">
+              </div>
+
+              <div class="col-12 d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-outline-secondary" onclick="toggleDocumentUpload(false)">
+                  Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="uploadApplicantDocumentFromView()">
+                  <i class="bi bi-upload me-1"></i> Upload
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <?php endif; ?>
+
+    <div id="documentsList" class="application-list">
+      <?php if (empty($documents)): ?>
+        <div id="documentsEmpty" class="empty-state">No document records.</div>
+      <?php else: ?>
+        <?php foreach ($documents as $doc): ?>
+          <div class="application-item doc-item" data-id="<?= esc($doc['id']) ?>">
+            <div class="flex-grow-1">
+              <div class="application-job"><?= esc($doc['document_type'] ?? 'Document') ?></div>
+              <div class="application-meta"><?= esc($doc['file_name'] ?? '-') ?></div>
+
+              <?php if (!empty($doc['remarks'])): ?>
+                <div class="application-meta"><?= esc($doc['remarks']) ?></div>
+              <?php endif; ?>
+
+              <?php if (!empty($doc['file_ext']) || !empty($doc['file_size'])): ?>
+                <div class="application-meta">
+                  <?= !empty($doc['file_ext']) ? strtoupper(esc($doc['file_ext'])) : '' ?>
+                  <?= !empty($doc['file_ext']) && !empty($doc['file_size']) ? ' • ' : '' ?>
+                  <?= !empty($doc['file_size']) ? number_format(((float) $doc['file_size']) / 1024, 2) . ' KB' : '' ?>
+                </div>
+              <?php endif; ?>
+            </div>
+
+            <div class="inline-edit-actions">
+              <a class="resume-chip" href="<?= base_url($doc['file_path']) ?>" target="_blank">
+                <i class="bi bi-file-earmark-text"></i>
+                View File
+              </a>
+
+              <button type="button" class="icon-btn text-danger" onclick="deleteApplicantDocument(<?= (int) $doc['id'] ?>, this)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
   </div>
 </div>
     
@@ -860,7 +934,6 @@ $statusClass = function ($status) {
   let educationModal = null;
   let jobModal = null;
   const applicantId = <?= (int)$applicant['id'] ?>;
-
   // ================= ALERT =================
   function pageAlert(type, message) {
     const el = document.getElementById('pageAlert');
@@ -912,16 +985,19 @@ $statusClass = function ($status) {
 
   window.saveProfileInline = async function () {
     clearAlert();
-
+  
     const fd = new FormData(document.getElementById('profileInlineForm'));
 
-    const res = await fetch(`<?= site_url('admin/applicants/update-inline-profile') ?>/${applicantId}`, {
+    const res = await fetch("<?= site_url('admin/applicants/update-inline-profile/' . $applicant['id']) ?>", {
       method: 'POST',
-      body: fd
-    });
-
+      body: fd,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    })
+    
     const data = await res.json();
-
     if (!data.success) {
       pageAlert('danger', 'Failed to save profile');
       return;
@@ -1061,5 +1137,133 @@ $statusClass = function ($status) {
 
 })();
 </script>
+<script>
+function toggleDocumentUpload(show) {
+  const wrap = document.getElementById('documentUploadWrap');
+  if (!wrap) return;
+  wrap.classList.toggle('d-none', !show);
+}
 
+function uploadApplicantDocumentFromView() {
+  const applicantId = <?= (int) ($applicant['id'] ?? 0) ?>;
+  const typeEl = document.getElementById('view_document_type');
+  const remarksEl = document.getElementById('view_document_remarks');
+  const fileEl = document.getElementById('view_document_file');
+
+  if (!typeEl.value) {
+    showPageAlert('danger', 'Document type is required.');
+    return;
+  }
+
+  if (!fileEl.files.length) {
+    showPageAlert('danger', 'Please choose a file.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('document_type', typeEl.value);
+  formData.append('remarks', remarksEl.value || '');
+  formData.append('document_file', fileEl.files[0]);
+  formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+  fetch("<?= site_url('admin/applicants/upload-document/') ?>" + applicantId, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json'
+    }
+  })
+  .then(async res => {
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Upload failed.');
+    return data;
+  })
+  .then(data => {
+    const list = document.getElementById('documentsList');
+    const empty = document.getElementById('documentsEmpty');
+    if (empty) empty.remove();
+
+    const html = `
+      <div class="application-item doc-item" data-id="${data.row.id}">
+        <div class="flex-grow-1">
+          <div class="application-job">${escapeHtml(data.row.document_type || 'Document')}</div>
+          <div class="application-meta">${escapeHtml(data.row.file_name || '-')}</div>
+          ${data.row.remarks ? `<div class="application-meta">${escapeHtml(data.row.remarks)}</div>` : ''}
+        </div>
+        <div class="inline-edit-actions">
+          <a class="resume-chip" href="${data.url}" target="_blank">
+            <i class="bi bi-file-earmark-text"></i>
+            View File
+          </a>
+          <button type="button" class="icon-btn text-danger" onclick="deleteApplicantDocument(${data.row.id}, this)">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    list.insertAdjacentHTML('afterbegin', html);
+
+    typeEl.value = '';
+    remarksEl.value = '';
+    fileEl.value = '';
+    toggleDocumentUpload(false);
+    showPageAlert('success', data.message || 'Document uploaded successfully.');
+  })
+  .catch(err => showPageAlert('danger', err.message || 'Upload failed.'));
+}
+function deleteApplicantDocument(id, btn) {
+  if (!confirm('Delete this document?')) return;
+
+  const formData = new FormData();
+  formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+  fetch("<?= site_url('admin/applicants/delete-document/') ?>" + id, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json'
+    }
+  })
+  .then(async res => {
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || 'Delete failed.');
+    return data;
+  })
+  .then(data => {
+    const item = btn.closest('.doc-item');
+    if (item) item.remove();
+
+    const list = document.getElementById('documentsList');
+    if (list && !list.querySelector('.doc-item')) {
+      list.innerHTML = '<div id="documentsEmpty" class="empty-state">No document records.</div>';
+    }
+
+    showPageAlert('success', data.message || 'Document deleted successfully.');
+  })
+  .catch(err => showPageAlert('danger', err.message || 'Delete failed.'));
+}
+
+function showPageAlert(type, message) {
+  const el = document.getElementById('pageAlert');
+  if (!el) return;
+  el.className = `alert alert-${type} mb-3`;
+  el.innerHTML = message;
+  el.classList.remove('d-none');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, function(m) {
+    return ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    })[m];
+  });
+}
+</script>
 <?= $this->endSection() ?>

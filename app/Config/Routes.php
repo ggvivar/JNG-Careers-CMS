@@ -80,9 +80,17 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->get('applicants', 'ApplicantController::index', ['filter' => 'adminfeature:applicants,can_view']);
         $routes->match(['get','post'],'applicants/create', 'ApplicantController::create', ['filter' => 'adminfeature:applicants,can_add']);
         $routes->match(['get','post'],'applicants/edit/(:num)','ApplicantController::edit/$1', ['filter' => 'adminfeature:job-posts,can_edit']);
-        
+        //upload document  
+        $routes->post('applicants/upload-document/(:num)', 'ApplicantController::uploadDocument/$1');
+        $routes->post('applicants/delete-document/(:num)', 'ApplicantController::deleteDocument/$1');
+        // ✅ employment inline
+        $routes->post('applicants/save-employment/(:num)', 'ApplicantController::saveEmploymentInline/$1');
+
+        // ✅ document inline (IMPORTANT)
+        $routes->post('applicants/upload-document-inline/(:num)', 'ApplicantController::uploadDocumentInline/$1');
+        $routes->post('applicants/delete-document-inline/(:num)', 'ApplicantController::deleteDocumentInline/$1');
         $routes->get('applicants/(:num)', 'ApplicantController::view/$1', ['filter' => 'adminfeature:applicants,can_view']);
-        $routes->post('applicants/update-inline-profile/(:num)', 'Admin\ApplicantController::updateInlineProfile/$1');
+        $routes->post('applicants/update-inline-profile/(:num)', 'ApplicantController::updateInlineProfile/$1');
         $routes->post('applicants/save-education/(:num)', 'ApplicantController::saveEducationInline/$1');
         $routes->post('applicants/delete-education/(:num)', 'ApplicantController::deleteEducationInline/$1');
         $routes->post('applicants/save-job-history/(:num)', 'ApplicantController::saveJobHistoryInline/$1');

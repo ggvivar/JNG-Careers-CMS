@@ -16,7 +16,7 @@ class ApplicationController extends BaseController
     $q = trim((string) $this->request->getGet('q'));
 
     $statusRaw = $this->request->getGet('status_id');
-    $assignedRaw = $this->request->getGet('assigned_to');
+    $assignedRaw = $this->request->getGet('assignedUserId');
     $overdueRaw = $this->request->getGet('overdue');
 
     $statusId = ($statusRaw !== null && $statusRaw !== '') ? (int) $statusRaw : null;
@@ -169,7 +169,7 @@ class ApplicationController extends BaseController
         if (strtolower($this->request->getMethod()) === 'post') {
             $applicantId = (int) ($this->request->getPost('applicant_id') ?: 0);
             $jobListId = (int) ($this->request->getPost('job_list_id') ?: 0);
-            $assignedUserId = $this->request->getPost('assigned_to') !== '' ? (int) $this->request->getPost('assigned_to') : null;
+            $assignedUserId = $this->request->getPost('assigned_user_id') !== '' ? (int) $this->request->getPost('assigned_user_id') : null;
             $source = trim((string) $this->request->getPost('source'));
             $appliedAt = trim((string) $this->request->getPost('applied_at'));
 
@@ -182,6 +182,8 @@ class ApplicationController extends BaseController
             $exists = $db->table('job_applications')
                 ->where('applicant_id', $applicantId)
                 ->where('job_list_id', $jobListId)
+                ->where('status_id !=', 23)
+                ->where('status_id !=', 24)
                 ->where('date_deleted', null)
                 ->get()
                 ->getRowArray();
@@ -231,6 +233,7 @@ class ApplicationController extends BaseController
             'application' => null,
             'applicantOptions' => $applicantOptions,
             'jobOptions' => $jobOptions,
+            'sourceOptions' => dd_common_defaults('Source'),
             'processorOptions' => $processorOptions,
         ]);
     }
@@ -285,6 +288,7 @@ class ApplicationController extends BaseController
         return view('admin/applications/view', [
             'application' => $application,
             'processorOptions' => $processorOptions,
+            'sourceOptions' => dd_common_defaults('Source'),
             'history' => $history,
         ]);
     }
@@ -377,8 +381,8 @@ class ApplicationController extends BaseController
             return redirect()->to('/admin/applications')->with('error', 'Application not found.');
         }
 
-        $assignedUserId = $this->request->getPost('assigned_to') !== ''
-            ? (int) $this->request->getPost('assigned_to')
+        $assignedUserId = $this->request->getPost('assignedUserId') !== ''
+            ? (int) $this->request->getPost('assignedUserId')
             : null;
 
         $db->table('job_applications')
@@ -426,16 +430,17 @@ class ApplicationController extends BaseController
         ? (int) $this->request->getPost('status_id')
         : null;
 
-    $newAssignedUserId = $this->request->getPost('assigned_to') !== ''
-        ? (int) $this->request->getPost('assigned_to')
+    $newAssignedUserId = $this->request->getPost('assignedUserId') !== ''
+        ? (int) $this->request->getPost('assignedUserId')
         : null;
 
     $remarks = trim((string) $this->request->getPost('remarks'));
 
+    $remarksAdded  = $remarks!== null;
     $statusChanged = $newStatusId !== null && $newStatusId !== $currentStatusId;
     $processorChanged = $newAssignedUserId !== $currentAssignedUserId;
-
-    if (! $statusChanged && ! $processorChanged) {
+    
+    if (! $statusChanged && ! $processorChanged && ! $remarksAdded) {
         return redirect()->to('/admin/applications/' . $id)->with('error', 'No changes detected.');
     }
 

@@ -447,21 +447,17 @@ $isEdit = $mode === 'edit';
             Save the applicant first before uploading documents.
           </div>
         <?php else: ?>
-          <form id="uploadDocumentForm" class="mb-4">
+          <div id="uploadDocumentForm" class="mb-4">
             <div class="row g-3">
               <div class="col-md-4">
                 <label class="form-label">Document Type</label>
                 <select name="document_type" class="form-select" required>
-                  <option value="">Select document type</option>
-                  <option value="Resume">Resume</option>
-                  <option value="Cover Letter">Cover Letter</option>
-                  <option value="Transcript of Records">Transcript of Records</option>
-                  <option value="Certificate">Certificate</option>
-                  <option value="Valid ID">Valid ID</option>
-                  <option value="Portfolio">Portfolio</option>
-                  <option value="Other">Other</option>
+                    <option value="">Select document type</option>
+                    <?php foreach (($documentTypeOptions ?? []) as $value => $label): ?>
+                        <option value="<?= esc($value) ?>"><?= esc($label) ?></option>
+                    <?php endforeach; ?>
                 </select>
-              </div>
+             </div>
 
               <div class="col-md-4">
                 <label class="form-label">Remarks</label>
@@ -479,7 +475,7 @@ $isEdit = $mode === 'edit';
                 </button>
               </div>
             </div>
-          </form>
+          </div>
 
           <div id="documentsList" class="application-list">
             <?php if (!empty($documents)): ?>
@@ -832,25 +828,47 @@ $isEdit = $mode === 'edit';
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-
 <script>
 (function () {
+  const form = document.getElementById('applicantForm');
   const educationWrapper = document.getElementById('education-wrapper');
   const jobWrapper = document.getElementById('job-wrapper');
+  const applicantId = <?= (int) ($applicant['id'] ?? 0) ?>;
+
+  function showFlash(type, message) {
+    if (typeof window.showFlashMessage === 'function') {
+      window.showFlashMessage(type, message);
+      return;
+    }
+
+    if (typeof window.flashMessage === 'function') {
+      window.flashMessage(type, message);
+      return;
+    }
+
+    console.log(type.toUpperCase() + ': ' + message);
+  }
+
+  function escapeHtml(val) {
+    return String(val ?? '').replace(/[&<>"']/g, function (m) {
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[m];
+    });
+  }
 
   window.removeRow = function (button) {
     const row = button.closest('.application-item');
-    if (!row) return;
-
-    const parent = row.parentElement;
-    row.remove();
-
-    if (parent && parent.children.length === 0) {
-      parent.innerHTML = '';
-    }
+    if (row) row.remove();
   };
 
   window.addEducation = function () {
+    if (!educationWrapper) return;
+
     educationWrapper.insertAdjacentHTML('beforeend', `
       <div class="application-item education-item">
         <div class="flex-grow-1 row-card-fields">
@@ -881,7 +899,6 @@ $isEdit = $mode === 'edit';
             </div>
           </div>
         </div>
-
         <div class="inline-edit-actions">
           <button type="button" class="icon-btn text-danger" onclick="removeRow(this)">
             <i class="bi bi-trash"></i>
@@ -892,13 +909,14 @@ $isEdit = $mode === 'edit';
   };
 
   window.addJob = function () {
+    if (!jobWrapper) return;
+
     const idx = document.querySelectorAll('#job-wrapper .job-item').length;
 
     jobWrapper.insertAdjacentHTML('beforeend', `
       <div class="application-item job-item">
         <div class="d-flex align-items-start gap-2 w-100">
           <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
-
           <div class="flex-grow-1 row-card-fields">
             <div class="row g-3">
               <div class="col-md-6">
@@ -945,7 +963,6 @@ $isEdit = $mode === 'edit';
               </div>
             </div>
           </div>
-
           <div class="inline-edit-actions">
             <button type="button" class="icon-btn text-danger" onclick="removeRow(this)">
               <i class="bi bi-trash"></i>
@@ -956,102 +973,101 @@ $isEdit = $mode === 'edit';
     `);
   };
 
-  document.addEventListener('DOMContentLoaded', function () {
-    if (typeof Sortable !== 'undefined' && jobWrapper) {
-      Sortable.create(jobWrapper, {
-        animation: 150,
-        handle: '.drag-handle',
-        ghostClass: 'sortable-ghost',
-        chosenClass: 'sortable-chosen'
-      });
-    }
-  });
-})();
-</script>
-<script>
-(function () {
-  const form = document.getElementById('applicantForm');
-  if (!form) return;
-
-  function pageAlert(type, message) {
-    let el = document.getElementById('pageAlert');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'pageAlert';
-      el.className = 'mb-3';
-      form.parentNode.insertBefore(el, form);
-    }
-
-    el.className = `alert alert-${type} mb-3`;
-    el.textContent = message;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (typeof Sortable !== 'undefined' && jobWrapper) {
+    Sortable.create(jobWrapper, {
+      animation: 150,
+      handle: '.drag-handle',
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen'
+    });
   }
 
-  form.addEventListener('submit', async function (e) {
-    e.preventDefault();
+  if (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
 
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const originalHtml = submitBtn ? submitBtn.innerHTML : '';
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalHtml = submitBtn ? submitBtn.innerHTML : '';
 
-    try {
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
-      }
-
-      const fd = new FormData(form);
-
-      const res = await fetch(form.action, {
-        method: 'POST',
-        body: fd,
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest'
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
         }
-      });
 
-      const data = await res.json();
+        const fd = new FormData(form);
 
-      if (!data.success) {
-        pageAlert('danger', data.message || 'Save failed.');
-        return;
+        const res = await fetch(form.action, {
+          method: 'POST',
+          body: fd,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          showFlash('error', data.message || 'Save failed.');
+          return;
+        }
+
+        showFlash('success', data.message || 'Saved successfully.');
+
+        if (data.edit_url) {
+          form.action = data.edit_url;
+          window.history.replaceState({}, '', data.edit_url);
+        }
+      } catch (err) {
+        showFlash('error', 'An error occurred while saving.');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalHtml;
+        }
       }
-
-      pageAlert('success', data.message || 'Saved successfully.');
-
-      if (data.edit_url && !form.dataset.modeUpdated) {
-        form.action = data.edit_url;
-        form.dataset.modeUpdated = '1';
-
-        const url = new URL(data.edit_url, window.location.origin);
-        window.history.replaceState({}, '', url.pathname);
-      }
-    } catch (err) {
-      pageAlert('danger', 'An error occurred while saving.');
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalHtml;
-      }
-    }
-  });
+    });
+  }
 
   window.uploadDocument = async function () {
-    const uploadForm = document.getElementById('uploadDocumentForm');
-    if (!uploadForm) return;
-
+    const uploadWrap = document.getElementById('uploadDocumentForm');
     const documentsList = document.getElementById('documentsList');
     const empty = document.getElementById('documentsEmpty');
-    const applicantId = <?= (int)($applicant['id'] ?? 0) ?>;
+    let currentApplicantId = <?= (int) ($applicant['id'] ?? 0) ?>;
 
-    if (!applicantId) {
-      pageAlert('warning', 'Save the applicant first before uploading documents.');
+    if (!currentApplicantId && form) {
+      const match = form.action.match(/\/edit\/(\d+)$/);
+      if (match) currentApplicantId = match[1];
+    }
+
+    if (!uploadWrap) return;
+
+    const documentType = uploadWrap.querySelector('[name="document_type"]');
+    const remarks = uploadWrap.querySelector('[name="remarks"]');
+    const fileInput = uploadWrap.querySelector('[name="document_file"]');
+
+    if (!currentApplicantId) {
+      showFlash('warning', 'Save the applicant first before uploading documents.');
+      return;
+    }
+
+    if (!documentType || !documentType.value) {
+      showFlash('error', 'Document type is required.');
+      return;
+    }
+
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
+      showFlash('error', 'Please select a file.');
       return;
     }
 
     try {
-      const fd = new FormData(uploadForm);
+      const fd = new FormData();
+      fd.append('document_type', documentType.value);
+      fd.append('remarks', remarks ? remarks.value : '');
+      fd.append('document_file', fileInput.files[0]);
 
-      const res = await fetch(`<?= site_url('admin/applicants/upload-document') ?>/${applicantId}`, {
+      const res = await fetch(`<?= site_url('admin/applicants/upload-document') ?>/${currentApplicantId}`, {
         method: 'POST',
         body: fd,
         headers: {
@@ -1061,8 +1077,8 @@ $isEdit = $mode === 'edit';
 
       const data = await res.json();
 
-      if (!data.success) {
-        pageAlert('danger', data.message || 'Upload failed.');
+      if (!res.ok || !data.success) {
+        showFlash('error', data.message || 'Upload failed.');
         return;
       }
 
@@ -1076,7 +1092,6 @@ $isEdit = $mode === 'edit';
             <div class="application-meta">${escapeHtml(row.file_name || '-')}</div>
             ${row.remarks ? `<div class="application-meta">${escapeHtml(row.remarks)}</div>` : ''}
           </div>
-
           <div class="inline-edit-actions">
             <a href="${data.url}" target="_blank" class="icon-btn text-decoration-none">
               <i class="bi bi-eye"></i>
@@ -1089,26 +1104,26 @@ $isEdit = $mode === 'edit';
       `;
 
       documentsList.insertAdjacentHTML('afterbegin', html);
-      uploadForm.reset();
-      pageAlert('success', data.message || 'Document uploaded.');
+
+      documentType.value = '';
+      if (remarks) remarks.value = '';
+      fileInput.value = '';
+
+      showFlash('success', data.message || 'Document uploaded successfully.');
     } catch (err) {
-      pageAlert('danger', 'An error occurred while uploading document.');
+      showFlash('error', 'An error occurred while uploading document.');
     }
   };
 
   window.deleteDocumentRow = async function (item) {
     if (!item) return;
 
-    const applicantId = <?= (int)($applicant['id'] ?? 0) ?>;
     const id = item.dataset.id;
+    if (!id) return;
 
     try {
-      const fd = new FormData();
-      fd.append('id', id);
-
-      const res = await fetch(`<?= site_url('admin/applicants/delete-document') ?>/${applicantId}`, {
+      const res = await fetch(`<?= site_url('admin/applicants/delete-document') ?>/${id}`, {
         method: 'POST',
-        body: fd,
         headers: {
           'X-Requested-With': 'XMLHttpRequest'
         }
@@ -1116,23 +1131,23 @@ $isEdit = $mode === 'edit';
 
       const data = await res.json();
 
-      if (!data.success) {
-        pageAlert('danger', data.message || 'Delete failed.');
+      if (!res.ok || !data.success) {
+        showFlash('error', data.message || 'Delete failed.');
         return;
       }
 
       item.remove();
-      pageAlert('success', data.message || 'Document deleted.');
+
+      const documentsList = document.getElementById('documentsList');
+      if (documentsList && !documentsList.querySelector('.doc-item')) {
+        documentsList.innerHTML = '<div id="documentsEmpty" class="empty-state">No uploaded documents yet.</div>';
+      }
+
+      showFlash('success', data.message || 'Document deleted.');
     } catch (err) {
-      pageAlert('danger', 'An error occurred while deleting document.');
+      showFlash('error', 'An error occurred while deleting document.');
     }
   };
-
-  function escapeHtml(val) {
-    return String(val ?? '').replace(/[&<>"']/g, m => ({
-      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-    }[m]));
-  }
 })();
 </script>
 <?= $this->endSection() ?>

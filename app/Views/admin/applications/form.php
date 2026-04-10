@@ -78,19 +78,31 @@
 
                 <div class="col-md-6">
                     <label class="form-label">Assign Processor</label>
-                    <select name="assigned_user_id" id="processorSelect" class="form-select">
+                    <select name="assignedUserId" id="processorSelect" class="form-select">
                         <option value="">Unassigned</option>
                         <?php foreach (($processorOptions ?? []) as $id => $label): ?>
-                            <option value="<?= esc($id) ?>" <?= old('assigned_user_id') == $id ? 'selected' : '' ?>>
+                            <option value="<?= esc($id) ?>" <?= old('assignedUserId') == $id ? 'selected' : '' ?>>
                                 <?= esc($label) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
-                <div class="col-md-6">
+                <!-- <div class="col-md-6">
                     <label class="form-label">Source</label>
                     <input type="text" name="source" class="form-control" value="<?= esc(old('source', 'Manual')) ?>">
+                </div>
+                 -->
+                <div class="col-md-6">
+                    <label class="form-label">Source</label>
+                    <select name="source" id="sourceSelect" class="form-select">
+                        <option value="">--Select--</option>
+                        <?php foreach (($sourceOptions ?? []) as $id => $label): ?>
+                            <option value="<?= esc($id) ?>" <?= old('source') == $id ? 'selected' : '' ?>>
+                                <?= esc($label) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <div class="col-md-6">
@@ -250,6 +262,12 @@ $(document).ready(function () {
 
     $('#processorSelect').select2({
         placeholder: 'Unassigned',
+        allowClear: true,
+        width: '100%',
+        dropdownParent: $(document.body)
+    });
+    $('#sourceSelect').select2({
+        placeholder: '-- Select Source --',
         allowClear: true,
         width: '100%',
         dropdownParent: $(document.body)
