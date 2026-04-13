@@ -132,6 +132,7 @@ ksort($groupMap);
 </div>
 
 <script>
+let manualGroups = [];
 const allData = <?= json_encode(array_values($defaults ?? []), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>.map(row => ({
     ...row,
     key1: String(row.key1 ?? '').trim(),
@@ -173,11 +174,12 @@ function rowHtml(row = {}) {
 }
 
 function getGroups() {
-    return [...new Set(
-        allData
-            .filter(r => !r.date_deleted && String(r.key1 ?? '').trim() !== '')
-            .map(r => String(r.key1 ?? '').trim())
-    )].sort((a, b) => a.localeCompare(b));
+    const dbGroups = allData
+        .filter(r => !r.date_deleted && String(r.key1 ?? '').trim() !== '')
+        .map(r => String(r.key1 ?? '').trim());
+
+    return [...new Set([...dbGroups, ...manualGroups])]
+        .sort((a, b) => a.localeCompare(b));
 }
 
 function filteredRows() {
@@ -255,7 +257,15 @@ document.getElementById('btnNewGroup').addEventListener('click', async () => {
             group: group.trim()
         });
 
-        currentGroup = res.group.trim();
+        const newGroup = String(res.group ?? '').trim();
+        if (!newGroup) return;
+
+        if (!manualGroups.includes(newGroup)) {
+            manualGroups.push(newGroup);
+        }
+
+        currentGroup = newGroup;
+
         renderTabs(currentGroup);
         renderTable();
     } catch (err) {
@@ -375,6 +385,8 @@ document.addEventListener('change', async function(e) {
         } else {
             allData.push(rowData);
         }
+
+        manualGroups = manualGroups.filter(g => g !== payload.key1);
 
         renderTabs(currentGroup);
         renderTable();

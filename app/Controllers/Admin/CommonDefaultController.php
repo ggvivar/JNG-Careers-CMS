@@ -266,7 +266,7 @@ public function createGroup()
     return $this->response->setJSON([
         'status'  => 'success',
         'group'   => $group,
-        'message' => 'Group created.',
+        'message' => 'Group ready. Add a value to save it.',
     ]);
 }
 
