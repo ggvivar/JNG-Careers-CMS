@@ -304,7 +304,14 @@
     gap: 1rem;
     margin-bottom: 1rem;
   }
+.confirm-delete-wrap {
+  animation: fadeIn .2s ease;
+}
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
   @media (max-width: 991px) {
     .applicant-name {
       font-size: 1.65rem;
@@ -377,34 +384,97 @@ $statusClass = function ($status) {
             </div>
 
             <form id="profileInlineForm" class="d-none">
-              <div class="inline-form-grid">
-                <div>
-                  <label class="form-label">Phone</label>
-                  <input type="text" name="phone" class="form-control" value="<?= esc($applicant['phone'] ?? '') ?>">
-                </div>
-                <div>
-                  <label class="form-label">Email</label>
-                  <input type="email" name="email" class="form-control" value="<?= esc($applicant['email'] ?? '') ?>">
-                </div>
-                <div>
-                  <label class="form-label">Address</label>
-                  <input type="text" name="address" class="form-control" value="<?= esc($applicant['address'] ?? '') ?>">
-                </div>
-                <div>
-                  <label class="form-label">City</label>
-                  <input type="text" name="city" class="form-control" value="<?= esc($applicant['city'] ?? '') ?>">
-                </div>
-                <div>
-                  <label class="form-label">Province</label>
-                  <input type="text" name="province" class="form-control" value="<?= esc($applicant['province'] ?? '') ?>">
-                </div>
-              </div>
+  <div class="inline-form-grid">
+    <div>
+      <label class="form-label">First Name</label>
+      <input type="text" name="firstname" class="form-control" value="<?= esc($applicant['firstname'] ?? '') ?>">
+    </div>
 
-              <div class="d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleProfileEdit(false)">Cancel</button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="saveProfileInline()">Save Changes</button>
-              </div>
-            </form>
+    <div>
+      <label class="form-label">Middle Name</label>
+      <input type="text" name="middlename" class="form-control" value="<?= esc($applicant['middlename'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Last Name</label>
+      <input type="text" name="lastname" class="form-control" value="<?= esc($applicant['lastname'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Suffix</label>
+      <input type="text" name="suffix" class="form-control" value="<?= esc($applicant['suffix'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Phone</label>
+      <input type="text" name="phone" class="form-control" value="<?= esc($applicant['phone'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" value="<?= esc($applicant['email'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Birth Date</label>
+      <input type="date" name="birthdate" class="form-control" value="<?= esc($applicant['birthdate'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Gender</label>
+      <select name="gender" class="form-select">
+        <option value="">Select gender</option>
+        <?php foreach (($genderOptions ?? []) as $value => $label): ?>
+          <option value="<?= esc($value) ?>" <?= (string)($applicant['gender'] ?? '') === (string)$value ? 'selected' : '' ?>>
+            <?= esc($label) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
+    <div>
+      <label class="form-label">Civil Status</label>
+      <select name="civil_status" class="form-select">
+        <option value="">Select civil status</option>
+        <?php foreach (($civilStatusOptions ?? []) as $value => $label): ?>
+          <option value="<?= esc($value) ?>" <?= (string)($applicant['civil_status'] ?? '') === (string)$value ? 'selected' : '' ?>>
+            <?= esc($label) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
+    <div>
+      <label class="form-label">Nationality</label>
+      <input type="text" name="nationality" class="form-control" value="<?= esc($applicant['nationality'] ?? '') ?>">
+    </div>
+
+    <div class="full">
+      <label class="form-label">Address</label>
+      <input type="text" name="address" class="form-control" value="<?= esc($applicant['address'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">City</label>
+      <input type="text" name="city" class="form-control" value="<?= esc($applicant['city'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Province</label>
+      <input type="text" name="province" class="form-control" value="<?= esc($applicant['province'] ?? '') ?>">
+    </div>
+
+    <div>
+      <label class="form-label">Zip Code</label>
+      <input type="text" name="zip_code" class="form-control" value="<?= esc($applicant['zip_code'] ?? '') ?>">
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleProfileEdit(false)">Cancel</button>
+    <button type="button" class="btn btn-primary btn-sm" onclick="saveProfileInline()">Save Changes</button>
+  </div>
+</form>
 
             <div id="profileDisplay">
               <div class="profile-grid">
@@ -489,46 +559,55 @@ $statusClass = function ($status) {
         </div>
                   
         <div id="personalInfoSection" class="collapse">
-          <div class="card-body">
-            <div class="profile-grid">
-              <div class="profile-item">
-                <div class="profile-label">First Name</div>
-                <div class="profile-value"><?= esc($applicant['firstname'] ?? '-') ?></div>
-              </div>
-              <div class="profile-item">
-                <div class="profile-label">Middle Name</div>
-                <div class="profile-value"><?= esc($applicant['middlename'] ?? '-') ?></div>
-              </div>
-              <div class="profile-item">
-                <div class="profile-label">Last Name</div>
-                <div class="profile-value"><?= esc($applicant['lastname'] ?? '-') ?></div>
-              </div>
+  <div class="card-body">
+    <div class="profile-grid">
+      <div class="profile-item">
+        <div class="profile-label">First Name</div>
+        <div class="profile-value" data-profile="firstname"><?= esc($applicant['firstname'] ?? '-') ?></div>
+      </div>
 
-              <div class="profile-item">
-                <div class="profile-label">Full Name</div>
-                <div class="profile-value"><?= esc($fullName !== '' ? $fullName : '-') ?></div>
-              </div>
+      <div class="profile-item">
+        <div class="profile-label">Middle Name</div>
+        <div class="profile-value" data-profile="middlename"><?= esc($applicant['middlename'] ?? '-') ?></div>
+      </div>
 
-              <div class="profile-item">
-                <div class="profile-label">Gender</div>
-                <div class="profile-value"><?= esc($applicant['gender'] ?? '-') ?></div>
-              </div>
-              <div class="profile-item">
-                <div class="profile-label">Civil Status</div>
-                <div class="profile-value"><?= esc($applicant['civil_status'] ?? '-') ?></div>
-              </div>
-              <div class="profile-item">
-                <div class="profile-label">Nationality</div>
-                <div class="profile-value"><?= esc($applicant['nationality'] ?? '-') ?></div>
-              </div>
-              
-              <div class="profile-item">
-                <div class="profile-label">Birth Date</div>
-                <div class="profile-value"><?= esc($applicant['birthdate'] ?? '-') ?></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="profile-item">
+        <div class="profile-label">Last Name</div>
+        <div class="profile-value" data-profile="lastname"><?= esc($applicant['lastname'] ?? '-') ?></div>
+      </div>
+
+      <div class="profile-item">
+        <div class="profile-label">Full Name</div>
+        <div class="profile-value" data-profile="full_name"><?= esc($fullName !== '' ? $fullName : '-') ?></div>
+      </div>
+
+      <div class="profile-item">
+        <div class="profile-label">Gender</div>
+        <div class="profile-value" data-profile="gender"><?= esc($applicant['gender'] ?? '-') ?></div>
+      </div>
+
+      <div class="profile-item">
+        <div class="profile-label">Civil Status</div>
+        <div class="profile-value" data-profile="civil_status"><?= esc($applicant['civil_status'] ?? '-') ?></div>
+      </div>
+
+      <div class="profile-item">
+        <div class="profile-label">Nationality</div>
+        <div class="profile-value" data-profile="nationality"><?= esc($applicant['nationality'] ?? '-') ?></div>
+      </div>
+
+      <div class="profile-item">
+        <div class="profile-label">Birth Date</div>
+        <div class="profile-value" data-profile="birthdate"><?= esc($applicant['birthdate'] ?? '-') ?></div>
+      </div>
+
+      <div class="profile-item">
+        <div class="profile-label">Zip Code</div>
+        <div class="profile-value" data-profile="zip_code"><?= esc($applicant['zip_code'] ?? '-') ?></div>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
 <div class="col-12">
@@ -643,54 +722,59 @@ $statusClass = function ($status) {
         </div>
 
         <div id="educationSection" class="collapse">
-          <div class="card-body">
-            <div class="section-toolbar">
-              <div class="text-muted small">Add or edit education records inline with a modal.</div>
-              <button type="button" class="btn btn-primary btn-sm" onclick="openEducationModal()">
-                <i class="bi bi-plus-lg me-1"></i> Add Education
+  <div class="card-body">
+    <div class="section-toolbar">
+      <div class="text-muted small">Add or edit education records inline with a modal.</div>
+      <button type="button" class="btn btn-primary btn-sm" onclick="openEducationModal()">
+        <i class="bi bi-plus-lg me-1"></i> Add Education
+      </button>
+    </div>
+
+    <div id="educationList" class="application-list">
+      <?php if (empty($educations)): ?>
+        <div class="empty-state" id="educationEmpty">No education records.</div>
+      <?php else: ?>
+        <?php foreach ($educations as $edu): ?>
+          <div class="application-item education-item"
+               data-id="<?= esc($edu['id'] ?? '') ?>"
+               data-school_name="<?= esc($edu['school_name'] ?? '') ?>"
+               data-degree="<?= esc($edu['degree'] ?? '') ?>"
+               data-field_of_study="<?= esc($edu['field_of_study'] ?? '') ?>"
+               data-start_year="<?= esc($edu['start_year'] ?? '') ?>"
+               data-end_year="<?= esc($edu['end_year'] ?? '') ?>"
+               data-honors="<?= esc($edu['honors'] ?? '') ?>">
+            <div class="flex-grow-1">
+              <div class="application-job"><?= esc($edu['school_name'] ?? '-') ?></div>
+              <div class="application-meta">
+                <?= esc($edu['degree'] ?? '-') ?>
+                <?php if (!empty($edu['field_of_study'])): ?>
+                  • <?= esc($edu['field_of_study']) ?>
+                <?php endif; ?>
+              </div>
+              <?php if (!empty($edu['start_year']) || !empty($edu['end_year'])): ?>
+                <div class="application-meta">
+                  <?= esc($edu['start_year'] ?? '') ?><?= !empty($edu['start_year']) || !empty($edu['end_year']) ? ' - ' : '' ?><?= esc($edu['end_year'] ?? '') ?>
+                </div>
+              <?php endif; ?>
+              <?php if (!empty($edu['honors'])): ?>
+                <div class="application-meta"><?= esc($edu['honors']) ?></div>
+              <?php endif; ?>
+            </div>
+
+            <div class="inline-edit-actions">
+              <button type="button" class="icon-btn" onclick="openEducationModal(this.closest('.education-item'))">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button type="button" class="icon-btn text-danger" onclick="confirmDelete(this, 'education')">
+                <i class="bi bi-trash"></i>
               </button>
             </div>
-
-            <?php if (empty($educations)): ?>
-              <div class="empty-state" id="educationEmpty">No education records.</div>
-            <?php endif; ?>
-
-            <div id="educationList" class="application-list">
-              <?php foreach ($educations as $edu): ?>
-                <div class="application-item education-item"
-                     data-id="<?= esc($edu['id'] ?? '') ?>"
-                     data-school_name="<?= esc($edu['school_name'] ?? '') ?>"
-                     data-degree="<?= esc($edu['degree'] ?? '') ?>"
-                     data-field_of_study="<?= esc($edu['field_of_study'] ?? '') ?>"
-                     data-start_year="<?= esc($edu['start_year'] ?? '') ?>"
-                     data-end_year="<?= esc($edu['end_year'] ?? '') ?>"
-                     data-honors="<?= esc($edu['honors'] ?? '') ?>">
-                  <div class="flex-grow-1">
-                    <div class="application-job"><?= esc($edu['school_name'] ?? '-') ?></div>
-                    <div class="application-meta">
-                      <?= esc($edu['degree'] ?? '-') ?>
-                      <?php if (!empty($edu['field_of_study'])): ?>
-                        • <?= esc($edu['field_of_study']) ?>
-                      <?php endif; ?>
-                    </div>
-                    <div class="application-meta">
-                      <?= esc(trim(($edu['start_year'] ?? '') . ' - ' . ($edu['end_year'] ?? ''))) ?>
-                    </div>
-                  </div>
-
-                  <div class="inline-edit-actions">
-                    <button type="button" class="icon-btn" onclick="openEducationModal(this.closest('.education-item'))">
-                      <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="icon-btn text-danger" onclick="deleteEducationRow(this.closest('.education-item'))">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                </div>
-              <?php endforeach; ?>
-            </div>
           </div>
-        </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
       </div>
     </div>
 
@@ -704,70 +788,70 @@ $statusClass = function ($status) {
         </div>
 
         <div id="jobHistorySection" class="collapse">
-          <div class="card-body">
-            <div class="section-toolbar">
-              <div class="text-muted small">Drag to reorder. Edit with modal without leaving this page.</div>
-              <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="saveJobOrder()">
-                  <i class="bi bi-save me-1"></i> Save Order
+  <div class="card-body">
+    <div class="section-toolbar">
+      <div class="text-muted small">Drag to reorder. Edit with modal without leaving this page.</div>
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="saveJobOrder()">
+          <i class="bi bi-save me-1"></i> Save Order
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openJobModal()">
+          <i class="bi bi-plus-lg me-1"></i> Add Job History
+        </button>
+      </div>
+    </div>
+
+    <div id="jobHistoryList" class="application-list">
+      <?php if (empty($jobHistory)): ?>
+        <div class="empty-state" id="jobHistoryEmpty">No job history records.</div>
+      <?php else: ?>
+        <?php foreach ($jobHistory as $job): ?>
+          <div class="application-item job-history-item"
+               data-id="<?= esc($job['id'] ?? '') ?>"
+               data-company_name="<?= esc($job['company_name'] ?? '') ?>"
+               data-company_address="<?= esc($job['company_address'] ?? '') ?>"
+               data-job_title="<?= esc($job['job_title'] ?? '') ?>"
+               data-department="<?= esc($job['department'] ?? '') ?>"
+               data-start_date="<?= esc($job['start_date'] ?? '') ?>"
+               data-end_date="<?= esc($job['end_date'] ?? '') ?>"
+               data-currently_working="<?= esc($job['currently_working'] ?? 0) ?>"
+               data-responsibilities="<?= esc($job['responsibilities'] ?? '') ?>"
+               data-salary="<?= esc($job['salary'] ?? '') ?>"
+               data-reason_for_leaving="<?= esc($job['reason_for_leaving'] ?? '') ?>">
+            <div class="d-flex align-items-start gap-2 w-100">
+              <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+
+              <div class="flex-grow-1">
+                <div class="application-job"><?= esc($job['company_name'] ?? '-') ?></div>
+                <div class="application-meta">
+                  <?= esc($job['job_title'] ?? '-') ?>
+                  <?php if (!empty($job['department'])): ?>
+                    • <?= esc($job['department']) ?>
+                  <?php endif; ?>
+                </div>
+                <div class="application-meta">
+                  <?= esc($job['start_date'] ?? '-') ?> - <?= esc(!empty($job['currently_working']) ? 'Present' : ($job['end_date'] ?? '-')) ?>
+                </div>
+                <?php if (!empty($job['responsibilities'])): ?>
+                  <div class="application-meta mt-1"><?= esc($job['responsibilities']) ?></div>
+                <?php endif; ?>
+              </div>
+
+              <div class="inline-edit-actions">
+                <button type="button" class="icon-btn" onclick="openJobModal(this.closest('.job-history-item'))">
+                  <i class="bi bi-pencil"></i>
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="openJobModal()">
-                  <i class="bi bi-plus-lg me-1"></i> Add Job History
+                <button type="button" class="icon-btn text-danger" onclick="confirmDelete(this, 'job')">
+                  <i class="bi bi-trash"></i>
                 </button>
               </div>
             </div>
-
-            <?php if (empty($jobHistory)): ?>
-              <div class="empty-state" id="jobHistoryEmpty">No job history records.</div>
-            <?php endif; ?>
-
-            <div id="jobHistoryList" class="application-list">
-              <?php foreach ($jobHistory as $job): ?>
-                <div class="application-item job-history-item"
-                     data-id="<?= esc($job['id'] ?? '') ?>"
-                     data-company_name="<?= esc($job['company_name'] ?? '') ?>"
-                     data-company_address="<?= esc($job['company_address'] ?? '') ?>"
-                     data-job_title="<?= esc($job['job_title'] ?? '') ?>"
-                     data-department="<?= esc($job['department'] ?? '') ?>"
-                     data-start_date="<?= esc($job['start_date'] ?? '') ?>"
-                     data-end_date="<?= esc($job['end_date'] ?? '') ?>"
-                     data-currently_working="<?= esc($job['currently_working'] ?? 0) ?>"
-                     data-responsibilities="<?= esc($job['responsibilities'] ?? '') ?>"
-                     data-salary="<?= esc($job['salary'] ?? '') ?>"
-                     data-reason_for_leaving="<?= esc($job['reason_for_leaving'] ?? '') ?>">
-                  <div class="d-flex align-items-start gap-2 w-100">
-                    <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
-
-                    <div class="flex-grow-1">
-                      <div class="application-job"><?= esc($job['company_name'] ?? '-') ?></div>
-                      <div class="application-meta">
-                        <?= esc($job['job_title'] ?? '-') ?>
-                        <?php if (!empty($job['department'])): ?>
-                          • <?= esc($job['department']) ?>
-                        <?php endif; ?>
-                      </div>
-                      <div class="application-meta">
-                        <?= esc(($job['start_date'] ?? '') . ' - ' . ($job['end_date'] ?? 'Present')) ?>
-                      </div>
-                      <?php if (!empty($job['responsibilities'])): ?>
-                        <div class="application-meta mt-1"><?= esc($job['responsibilities']) ?></div>
-                      <?php endif; ?>
-                    </div>
-
-                    <div class="inline-edit-actions">
-                      <button type="button" class="icon-btn" onclick="openJobModal(this.closest('.job-history-item'))">
-                        <i class="bi bi-pencil"></i>
-                      </button>
-                      <button type="button" class="icon-btn text-danger" onclick="deleteJobRow(this.closest('.job-history-item'))">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              <?php endforeach; ?>
-            </div>
           </div>
-        </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </div>
+</div>
       </div>
     </div>
 
@@ -984,10 +1068,12 @@ $statusClass = function ($status) {
   };
 
   window.saveProfileInline = async function () {
-    clearAlert();
-  
-    const fd = new FormData(document.getElementById('profileInlineForm'));
+  clearAlert();
 
+  const form = document.getElementById('profileInlineForm');
+  const fd = new FormData(form);
+
+  try {
     const res = await fetch("<?= site_url('admin/applicants/update-inline-profile/' . $applicant['id']) ?>", {
       method: 'POST',
       body: fd,
@@ -995,114 +1081,241 @@ $statusClass = function ($status) {
         'X-Requested-With': 'XMLHttpRequest',
         'Accept': 'application/json'
       }
-    })
-    
-    const data = await res.json();
-    if (!data.success) {
-      pageAlert('danger', 'Failed to save profile');
-      return;
-    }
-
-    // update UI
-    document.querySelectorAll('[data-profile]').forEach(el => {
-      const key = el.dataset.profile;
-      el.textContent = fd.get(key) || '-';
     });
 
-    document.getElementById('heroName').textContent =
-      `${fd.get('firstname')} ${fd.get('lastname')}`;
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Failed to save profile');
+    }
+
+    document.querySelectorAll('[data-profile]').forEach(el => {
+      const key = el.dataset.profile;
+
+      if (key === 'full_name') {
+        el.textContent = data.full_name || '-';
+      } else {
+        el.textContent = fd.get(key) || '-';
+      }
+    });
+
+    document.getElementById('heroName').textContent = data.full_name || '-';
+    document.getElementById('heroEmail').textContent = fd.get('email') || '-';
 
     toggleProfileEdit(false);
-    pageAlert('success', 'Profile updated');
-  };
+    pageAlert('success', data.message || 'Profile updated successfully.');
+  } catch (err) {
+    pageAlert('danger', err.message || 'Failed to save profile');
+  }
+};
 
   // ================= EDUCATION =================
   window.openEducationModal = function (item = null) {
-    document.getElementById('edu_id').value = item?.dataset.id || '';
-    document.getElementById('edu_school_name').value = item?.dataset.school_name || '';
-    document.getElementById('edu_degree').value = item?.dataset.degree || '';
-    document.getElementById('edu_field_of_study').value = item?.dataset.field_of_study || '';
+  document.getElementById('edu_id').value = item?.dataset.id || '';
+  document.getElementById('edu_school_name').value = item?.dataset.school_name || '';
+  document.getElementById('edu_degree').value = item?.dataset.degree || '';
+  document.getElementById('edu_field_of_study').value = item?.dataset.field_of_study || '';
+  document.getElementById('edu_start_year').value = item?.dataset.start_year || '';
+  document.getElementById('edu_end_year').value = item?.dataset.end_year || '';
+  document.getElementById('edu_honors').value = item?.dataset.honors || '';
 
-    educationModal.show();
-  };
+  educationModal.show();
+};
 
-  window.saveEducationModal = async function () {
-    clearAlert();
+window.saveEducationModal = async function () {
+  clearAlert();
 
-    const fd = new FormData();
-    fd.append('id', document.getElementById('edu_id').value);
-    fd.append('school_name', document.getElementById('edu_school_name').value);
-    fd.append('degree', document.getElementById('edu_degree').value);
-    fd.append('field_of_study', document.getElementById('edu_field_of_study').value);
+  const id = document.getElementById('edu_id').value;
+  const school_name = document.getElementById('edu_school_name').value;
+  const degree = document.getElementById('edu_degree').value;
+  const field_of_study = document.getElementById('edu_field_of_study').value;
+  const start_year = document.getElementById('edu_start_year').value;
+  const end_year = document.getElementById('edu_end_year').value;
+  const honors = document.getElementById('edu_honors').value;
 
-    const res = await fetch(`<?= site_url('admin/applicants/save-education') ?>/${applicantId}`, {
-      method: 'POST',
-      body: fd
-    });
+  const fd = new FormData();
+  fd.append('id', id);
+  fd.append('school_name', school_name);
+  fd.append('degree', degree);
+  fd.append('field_of_study', field_of_study);
+  fd.append('start_year', start_year);
+  fd.append('end_year', end_year);
+  fd.append('honors', honors);
 
-    const data = await res.json();
-
-    if (!data.success) {
-      pageAlert('danger', 'Save failed');
-      return;
+  const res = await fetch(`<?= site_url('admin/applicants/save-education') ?>/${applicantId}`, {
+    method: 'POST',
+    body: fd,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json'
     }
+  });
 
-    const html = `
-      <div class="application-item education-item" data-id="${data.row.id}">
-        <div>
-          <strong>${escapeHtml(data.row.school_name)}</strong>
-          <div class="application-meta">${escapeHtml(data.row.degree)}</div>
+  const data = await res.json();
+
+  if (!data.success) {
+    pageAlert('danger', data.message || 'Save failed');
+    return;
+  }
+
+  const row = data.row || {};
+  const rowHtml = `
+    <div class="application-item education-item"
+         data-id="${escapeHtml(row.id || '')}"
+         data-school_name="${escapeHtml(row.school_name || '')}"
+         data-degree="${escapeHtml(row.degree || '')}"
+         data-field_of_study="${escapeHtml(row.field_of_study || '')}"
+         data-start_year="${escapeHtml(row.start_year || '')}"
+         data-end_year="${escapeHtml(row.end_year || '')}"
+         data-honors="${escapeHtml(row.honors || '')}">
+      <div class="flex-grow-1">
+        <div class="application-job">${escapeHtml(row.school_name || '-')}</div>
+        <div class="application-meta">
+          ${escapeHtml(row.degree || '-')}
+          ${row.field_of_study ? ` • ${escapeHtml(row.field_of_study)}` : ''}
         </div>
-      </div>`;
+        ${(row.start_year || row.end_year) ? `<div class="application-meta">${escapeHtml(row.start_year || '')} - ${escapeHtml(row.end_year || '')}</div>` : ''}
+        ${row.honors ? `<div class="application-meta">${escapeHtml(row.honors)}</div>` : ''}
+      </div>
+      <div class="inline-edit-actions">
+        <button type="button" class="icon-btn" onclick="openEducationModal(this.closest('.education-item'))">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button type="button" class="icon-btn text-danger" onclick="deleteEducationRow(this.closest('.education-item'))">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </div>
+  `;
 
-    document.getElementById('educationList').insertAdjacentHTML('afterbegin', html);
+  const list = document.getElementById('educationList');
+  const empty = document.getElementById('educationEmpty');
+  if (empty) empty.remove();
 
-    educationModal.hide();
-    pageAlert('success', 'Education saved');
-  };
+  const existing = list.querySelector(`.education-item[data-id="${row.id}"]`);
+  if (existing) {
+    existing.outerHTML = rowHtml;
+  } else {
+    list.insertAdjacentHTML('afterbegin', rowHtml);
+  }
 
+  educationModal.hide();
+  pageAlert('success', data.message || 'Education saved');
+};
   // ================= JOB =================
   window.openJobModal = function (item = null) {
-    document.getElementById('job_id').value = item?.dataset.id || '';
-    document.getElementById('job_company_name').value = item?.dataset.company_name || '';
-    document.getElementById('job_job_title').value = item?.dataset.job_title || '';
+  document.getElementById('job_id').value = item?.dataset.id || '';
+  document.getElementById('job_company_name').value = item?.dataset.company_name || '';
+  document.getElementById('job_company_address').value = item?.dataset.company_address || '';
+  document.getElementById('job_job_title').value = item?.dataset.job_title || '';
+  document.getElementById('job_department').value = item?.dataset.department || '';
+  document.getElementById('job_start_date').value = item?.dataset.start_date || '';
+  document.getElementById('job_end_date').value = item?.dataset.end_date || '';
+  document.getElementById('job_currently_working').checked = (item?.dataset.currently_working || '0') === '1';
+  document.getElementById('job_responsibilities').value = item?.dataset.responsibilities || '';
+  document.getElementById('job_salary').value = item?.dataset.salary || '';
+  document.getElementById('job_reason_for_leaving').value = item?.dataset.reason_for_leaving || '';
 
-    jobModal.show();
-  };
+  jobModal.show();
+};
 
-  window.saveJobModal = async function () {
-    clearAlert();
+window.saveJobModal = async function () {
+  clearAlert();
 
-    const fd = new FormData();
-    fd.append('id', document.getElementById('job_id').value);
-    fd.append('company_name', document.getElementById('job_company_name').value);
-    fd.append('job_title', document.getElementById('job_job_title').value);
+  const id = document.getElementById('job_id').value;
+  const company_name = document.getElementById('job_company_name').value;
+  const company_address = document.getElementById('job_company_address').value;
+  const job_title = document.getElementById('job_job_title').value;
+  const department = document.getElementById('job_department').value;
+  const start_date = document.getElementById('job_start_date').value;
+  const end_date = document.getElementById('job_end_date').value;
+  const currently_working = document.getElementById('job_currently_working').checked ? '1' : '0';
+  const responsibilities = document.getElementById('job_responsibilities').value;
+  const salary = document.getElementById('job_salary').value;
+  const reason_for_leaving = document.getElementById('job_reason_for_leaving').value;
 
-    const res = await fetch(`<?= site_url('admin/applicants/save-job-history') ?>/${applicantId}`, {
-      method: 'POST',
-      body: fd
-    });
+  const fd = new FormData();
+  fd.append('id', id);
+  fd.append('company_name', company_name);
+  fd.append('company_address', company_address);
+  fd.append('job_title', job_title);
+  fd.append('department', department);
+  fd.append('start_date', start_date);
+  fd.append('end_date', end_date);
+  fd.append('currently_working', currently_working);
+  fd.append('responsibilities', responsibilities);
+  fd.append('salary', salary);
+  fd.append('reason_for_leaving', reason_for_leaving);
 
-    const data = await res.json();
-
-    if (!data.success) {
-      pageAlert('danger', 'Save failed');
-      return;
+  const res = await fetch(`<?= site_url('admin/applicants/save-job-history') ?>/${applicantId}`, {
+    method: 'POST',
+    body: fd,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json'
     }
+  });
 
-    const html = `
-      <div class="application-item job-history-item" data-id="${data.row.id}">
-        <div>
-          <strong>${escapeHtml(data.row.company_name)}</strong>
-          <div class="application-meta">${escapeHtml(data.row.job_title)}</div>
+  const data = await res.json();
+
+  if (!data.success) {
+    pageAlert('danger', data.message || 'Save failed');
+    return;
+  }
+
+  const row = data.row || {};
+  const rowHtml = `
+    <div class="application-item job-history-item"
+         data-id="${escapeHtml(row.id || '')}"
+         data-company_name="${escapeHtml(row.company_name || '')}"
+         data-company_address="${escapeHtml(row.company_address || '')}"
+         data-job_title="${escapeHtml(row.job_title || '')}"
+         data-department="${escapeHtml(row.department || '')}"
+         data-start_date="${escapeHtml(row.start_date || '')}"
+         data-end_date="${escapeHtml(row.end_date || '')}"
+         data-currently_working="${escapeHtml(row.currently_working || '0')}"
+         data-responsibilities="${escapeHtml(row.responsibilities || '')}"
+         data-salary="${escapeHtml(row.salary || '')}"
+         data-reason_for_leaving="${escapeHtml(row.reason_for_leaving || '')}">
+      <div class="d-flex align-items-start gap-2 w-100">
+        <span class="drag-handle"><i class="bi bi-grip-vertical"></i></span>
+        <div class="flex-grow-1">
+          <div class="application-job">${escapeHtml(row.company_name || '-')}</div>
+          <div class="application-meta">
+            ${escapeHtml(row.job_title || '-')}
+            ${row.department ? ` • ${escapeHtml(row.department)}` : ''}
+          </div>
+          <div class="application-meta">
+            ${escapeHtml(row.start_date || '-')} - ${row.currently_working == 1 ? 'Present' : escapeHtml(row.end_date || '-')}
+          </div>
+          ${row.responsibilities ? `<div class="application-meta mt-1">${escapeHtml(row.responsibilities)}</div>` : ''}
         </div>
-      </div>`;
+        <div class="inline-edit-actions">
+          <button type="button" class="icon-btn" onclick="openJobModal(this.closest('.job-history-item'))">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button type="button" class="icon-btn text-danger" onclick="deleteJobRow(this.closest('.job-history-item'))">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
 
-    document.getElementById('jobHistoryList').insertAdjacentHTML('afterbegin', html);
+  const list = document.getElementById('jobHistoryList');
+  const empty = document.getElementById('jobHistoryEmpty');
+  if (empty) empty.remove();
 
-    jobModal.hide();
-    pageAlert('success', 'Job saved');
-  };
+  const existing = list.querySelector(`.job-history-item[data-id="${row.id}"]`);
+  if (existing) {
+    existing.outerHTML = rowHtml;
+  } else {
+    list.insertAdjacentHTML('afterbegin', rowHtml);
+  }
+
+  jobModal.hide();
+  pageAlert('success', data.message || 'Job history saved');
+};
 
   // ================= DOCUMENT =================
   window.uploadDocument = async function () {
@@ -1265,5 +1478,117 @@ function escapeHtml(str) {
     })[m];
   });
 }
+
+window.deleteEducationRow = async function (item) {
+  if (!item) return;
+
+  const id = item.dataset.id;
+  const applicantId = <?= (int) ($applicant['id'] ?? 0) ?>;
+
+  const fd = new FormData();
+  fd.append('id', id);
+  fd.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+  try {
+    const res = await fetch(`<?= site_url('admin/applicants/delete-education') ?>/${applicantId}`, {
+      method: 'POST',
+      body: fd,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Delete failed');
+    }
+
+    item.remove();
+
+    const list = document.getElementById('educationList');
+    if (list && !list.querySelector('.education-item')) {
+      list.innerHTML = '<div class="empty-state" id="educationEmpty">No education records.</div>';
+    }
+
+    showPageAlert('success', data.message || 'Education deleted successfully.');
+  } catch (err) {
+    showPageAlert('danger', err.message || 'Delete failed.');
+  }
+};
+
+window.deleteJobRow = async function (item) {
+  if (!item) return;
+
+  const id = item.dataset.id;
+  const applicantId = <?= (int) ($applicant['id'] ?? 0) ?>;
+
+  const fd = new FormData();
+  fd.append('id', id);
+  fd.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+  try {
+    const res = await fetch(`<?= site_url('admin/applicants/delete-job-history') ?>/${applicantId}`, {
+      method: 'POST',
+      body: fd,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json'
+      }
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Delete failed');
+    }
+
+    item.remove();
+
+    const list = document.getElementById('jobHistoryList');
+    if (list && !list.querySelector('.job-history-item')) {
+      list.innerHTML = '<div class="empty-state" id="jobHistoryEmpty">No job history records.</div>';
+    }
+
+    showPageAlert('success', data.message || 'Job history deleted successfully.');
+  } catch (err) {
+    showPageAlert('danger', err.message || 'Delete failed.');
+  }
+};
+window.confirmDelete = function(btn, type) {
+  const parent = btn.closest('.inline-edit-actions');
+  if (!parent || parent.querySelector('.confirm-delete-wrap')) return;
+
+  btn.style.display = 'none';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'confirm-delete-wrap d-flex align-items-center gap-2 flex-wrap';
+  wrap.innerHTML = `
+    <span class="text-danger small fw-semibold">Are you sure you want to delete?</span>
+    <button type="button" class="btn btn-sm btn-danger js-confirm-yes">Yes</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary js-confirm-cancel">Cancel</button>
+  `;
+
+  parent.appendChild(wrap);
+
+  wrap.querySelector('.js-confirm-cancel').addEventListener('click', function () {
+    wrap.remove();
+    btn.style.display = '';
+  });
+
+  wrap.querySelector('.js-confirm-yes').addEventListener('click', function () {
+    const item = btn.closest(type === 'education' ? '.education-item' : '.job-history-item');
+
+    if (type === 'education') {
+      deleteEducationRow(item);
+    } else if (type === 'job') {
+      deleteJobRow(item);
+    }
+
+    wrap.remove();
+    btn.style.display = '';
+  });
+};
 </script>
 <?= $this->endSection() ?>

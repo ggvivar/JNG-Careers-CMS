@@ -451,7 +451,7 @@ $isEdit = $mode === 'edit';
             <div class="row g-3">
               <div class="col-md-4">
                 <label class="form-label">Document Type</label>
-                <select name="document_type" class="form-select" required>
+                <select name="document_type" class="form-select">
                     <option value="">Select document type</option>
                     <?php foreach (($documentTypeOptions ?? []) as $value => $label): ?>
                         <option value="<?= esc($value) ?>"><?= esc($label) ?></option>
@@ -466,7 +466,7 @@ $isEdit = $mode === 'edit';
 
               <div class="col-md-4">
                 <label class="form-label">File</label>
-                <input type="file" name="document_file" class="form-control" required>
+                <input type="file" name="document_file" class="form-control">
               </div>
 
               <div class="col-12 d-flex justify-content-end">

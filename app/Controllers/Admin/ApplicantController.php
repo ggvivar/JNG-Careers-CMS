@@ -597,6 +597,8 @@ public function edit($id)
             'documents'    => $documents,
             'employment'   => $employment ?? [],
             'documentTypeOptions' => dd_common_defaults('Document Type'),
+            'genderOptions'       => dd_common_defaults('Gender'),
+            'civilStatusOptions'  => dd_common_defaults('Civil Status'),
         ]);
     }
 
@@ -699,6 +701,7 @@ public function edit($id)
     public function updateInlineProfile($id)
 {
     $id = (int) $id;
+
     if (! $this->request->isAJAX()) {
         return $this->response->setStatusCode(400)->setJSON([
             'success' => false,
@@ -718,12 +721,43 @@ public function edit($id)
         ]);
     }
 
+    $firstname    = trim((string) $this->request->getPost('firstname'));
+    $middlename   = trim((string) $this->request->getPost('middlename'));
+    $lastname     = trim((string) $this->request->getPost('lastname'));
+    $suffix       = trim((string) $this->request->getPost('suffix'));
+    $phone        = trim((string) $this->request->getPost('phone'));
+    $email        = trim((string) $this->request->getPost('email'));
+    $birthdate    = trim((string) $this->request->getPost('birthdate'));
+    $gender       = trim((string) $this->request->getPost('gender'));
+    $civilStatus  = trim((string) $this->request->getPost('civil_status'));
+    $nationality  = trim((string) $this->request->getPost('nationality'));
+    $address      = trim((string) $this->request->getPost('address'));
+    $city         = trim((string) $this->request->getPost('city'));
+    $province     = trim((string) $this->request->getPost('province'));
+    $zipCode      = trim((string) $this->request->getPost('zip_code'));
+
+    if ($firstname === '' || $lastname === '') {
+        return $this->response->setStatusCode(422)->setJSON([
+            'success' => false,
+            'message' => 'First name and last name are required.',
+        ]);
+    }
+
     $data = [
-        'phone'        => trim((string) $this->request->getPost('phone')) ?: null,
-        'email'        => trim((string) $this->request->getPost('email')) ?: null,
-        'address'      => trim((string) $this->request->getPost('address')) ?: null,
-        'city'         => trim((string) $this->request->getPost('city')) ?: null,
-        'province'     => trim((string) $this->request->getPost('province')) ?: null,
+        'firstname'    => $firstname,
+        'middlename'   => $middlename !== '' ? $middlename : null,
+        'lastname'     => $lastname,
+        'suffix'       => $suffix !== '' ? $suffix : null,
+        'phone'        => $phone !== '' ? $phone : null,
+        'email'        => $email !== '' ? $email : null,
+        'birthdate'    => $birthdate !== '' ? $birthdate : null,
+        'gender'       => $gender !== '' ? $gender : null,
+        'civil_status' => $civilStatus !== '' ? $civilStatus : null,
+        'nationality'  => $nationality !== '' ? $nationality : null,
+        'address'      => $address !== '' ? $address : null,
+        'city'         => $city !== '' ? $city : null,
+        'province'     => $province !== '' ? $province : null,
+        'zip_code'     => $zipCode !== '' ? $zipCode : null,
         'date_updated' => date('Y-m-d H:i:s'),
     ];
 
@@ -733,6 +767,7 @@ public function edit($id)
         'success' => true,
         'message' => 'Profile updated successfully.',
         'row'     => $data,
+        'full_name' => trim($firstname . ' ' . ($middlename !== '' ? $middlename . ' ' : '') . $lastname),
     ]);
 }
 

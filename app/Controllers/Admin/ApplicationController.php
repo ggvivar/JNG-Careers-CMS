@@ -444,7 +444,8 @@ class ApplicationController extends BaseController
         return redirect()->to('/admin/applications/' . $id)->with('error', 'No changes detected.');
     }
 
-    $dueAt = $application['due_at'] ?? null;
+    // $dueAt = $application['due_at'] ?? null;
+    $dueAt = $application['grace_period'] ?? null;
     $emailResult = null;
 
     if ($statusChanged) {
@@ -456,7 +457,8 @@ class ApplicationController extends BaseController
 
         $transition = $validation['transition'];
         $dueAt = $workflow->getDueAt(
-            isset($transition['due_at']) ? (int) $transition['due_at'] : null
+            // isset($transition['due_at']) ? (int) $transition['due_at'] : null
+            isset($transition['grace_period']) ? (int) $transition['grace_period'] : null
         );
 
         $applicantRow = $db->table('applicants')
@@ -621,7 +623,7 @@ public function assigned()
             ->groupEnd();
     }
 
-    if ($statusId !== null) {
+    if ($statusId !== null && $statusId !== 0 ) {
         $builder->where('ja.status_id', $statusId);
     }
 
@@ -656,6 +658,7 @@ public function assigned()
         if (!empty($closedStatusIds)) {
             $builder->whereNotIn('ja.status_id', $closedStatusIds);
         }
+
     return view('admin/applications/assigned', [
         'applications' => $applications,
         'searchQuery' => $q,
