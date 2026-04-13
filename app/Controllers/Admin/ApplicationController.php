@@ -658,7 +658,7 @@ public function assigned()
         if (!empty($closedStatusIds)) {
             $builder->whereNotIn('ja.status_id', $closedStatusIds);
         }
-
+    // dd($applications);
     return view('admin/applications/assigned', [
         'applications' => $applications,
         'searchQuery' => $q,

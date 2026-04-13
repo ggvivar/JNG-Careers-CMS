@@ -112,7 +112,8 @@
                     return '<span class="badge bg-danger">Overdue</span><div class="small text-danger mt-1">' . esc($value) . '</div>';
                 }
 
-                return '<span class="badge bg-success">On Time</span><div class="small text-muted mt-1">' . esc($value) . '</div>';
+                // return '<span class="badge bg-success">On Time</span><div class="small text-muted mt-1">' . esc($value) . '</div>';
+                return '<div class="small text-muted mt-1">' . esc($value) . '</div>';
             },
         ],
         ['key' => 'source', 'label' => 'Source'],
