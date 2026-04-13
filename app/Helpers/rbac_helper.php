@@ -35,7 +35,7 @@ if (! function_exists('rbac_can_feature')) {
         if (! $roleId) {
             return false;
         }
-
+        
         $row = db_connect()->table('role_feature_permissions rfp')
             ->select('rfp.' . $permission)
             ->join('features f', 'f.id = rfp.feature_id', 'inner')
@@ -44,7 +44,7 @@ if (! function_exists('rbac_can_feature')) {
             ->where('f.date_deleted', null)
             ->get()
             ->getRowArray();
-
+        // dd( $row);
         return $row && ! empty($row[$permission]);
     }
 }

@@ -153,11 +153,11 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         $routes->post('common-defaults/delete-group', 'CommonDefaultController::deleteGroup');
         });
         //Workflow
-        $routes->get('workflows', 'WorkflowTransitionController::index', ['filter' => 'adminfeature:status,can_view']);
-        $routes->match(['get', 'post'], 'workflows/create', 'WorkflowTransitionController::create', ['filter' => 'adminfeature:status,can_add']);
-        $routes->match(['get', 'post'], 'workflows/edit/(:num)', 'WorkflowTransitionController::edit/$1', ['filter' => 'adminfeature:status,can_edit']);
-        $routes->post('workflows/delete/(:num)', 'WorkflowTransitionController::delete/$1', ['filter' => 'adminfeature:status,can_delete']);
-        $routes->get('workflows/statuses-by-feature', 'WorkflowTransitionController::statusesByFeature', ['filter' => 'adminfeature:status,can_view']);
+        $routes->get('workflows', 'WorkflowTransitionController::index', ['filter' => 'adminfeature:workflows,can_view']);
+        $routes->match(['get', 'post'], 'workflows/create', 'WorkflowTransitionController::create', ['filter' => 'adminfeature:workflows,can_add']);
+        $routes->match(['get', 'post'], 'workflows/edit/(:num)', 'WorkflowTransitionController::edit/$1', ['filter' => 'adminfeature:workflows,can_edit']);
+        $routes->post('workflows/delete/(:num)', 'WorkflowTransitionController::delete/$1', ['filter' => 'adminfeature:workfworkflowslow,can_delete']);
+        $routes->get('workflows/statuses-by-feature', 'WorkflowTransitionController::statusesByFeature', ['filter' => 'adminfeature:workflows,can_view']);
         $routes->match(['get', 'post'], 'workflows/edit-feature/(:segment)', 'WorkflowTransitionController::editFeature/$1', ['filter' => 'adminfeature:workflows,can_edit']);
         //Messaging 
         $routes->get('message-templates', 'MessageTemplateController::index', ['filter' => 'adminfeature:message-templates,can_view']);
