@@ -59,7 +59,7 @@ $quickLinks = [
     ],
     [
         'label'   => 'My Processing',
-        'url'     => 'admin/applications/my-processing',
+        'url'     => 'admin/applications/assigned-to-me',
         'icon'    => 'bi-person-workspace',
         'feature' => 'applications',
     ],
