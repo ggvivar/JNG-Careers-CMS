@@ -1,27 +1,10 @@
 <?php
-
-helper('form_builder');
-
 $title       = $title ?? 'Form';
 $subtitle    = $subtitle ?? '';
 $backUrl     = $backUrl ?? '#';
 $fields      = $fields ?? [];
-$sections    = $sections ?? [];
 $submitLabel = $submitLabel ?? 'Save';
-
-if (empty($sections)) {
-    $sections = [
-        [
-            'id' => 'main',
-            'title' => 'Form Details',
-            'subtitle' => 'Fill in the required information below',
-            'fields' => $fields,
-        ],
-    ];
-}
 ?>
-
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 
 <style>
     .generic-form-page {
@@ -99,12 +82,37 @@ if (empty($sections)) {
         margin-bottom: .45rem;
     }
 
+    .form-control,
+    .form-select {
+        border-radius: 12px;
+        border-color: #dbe1e7;
+        padding-top: .6rem;
+        padding-bottom: .6rem;
+        box-shadow: none !important;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12) !important;
+    }
+
+    textarea.form-control {
+        min-height: 110px;
+    }
+
+    .meta-note,
+    .form-text {
+        font-size: .8rem;
+        color: #98a2b3;
+    }
+
     .field-shell {
         padding: .1rem 0;
     }
 
     .field-shell.is-checkbox {
-        padding-top: .4rem;
+        padding-top: 1.9rem;
     }
 
     .form-check {
@@ -124,12 +132,6 @@ if (empty($sections)) {
     .form-check-label {
         font-weight: 600;
         color: #344054;
-    }
-
-    .meta-note,
-    .form-text {
-        font-size: .8rem;
-        color: #98a2b3;
     }
 
     .sticky-actions {
@@ -159,209 +161,6 @@ if (empty($sections)) {
     .btn-primary {
         box-shadow: 0 8px 18px rgba(13, 110, 253, 0.18);
     }
-
-    .form-floating > .form-control,
-    .form-floating > .form-select {
-        height: calc(3.5rem + 2px);
-        min-height: calc(3.5rem + 2px);
-        border-radius: 12px;
-        border-color: #dbe1e7;
-        box-shadow: none !important;
-        padding-top: 1.625rem;
-        padding-bottom: .625rem;
-    }
-
-    .form-floating > textarea.form-control {
-        height: auto;
-        min-height: 120px;
-        padding-top: 1.4rem;
-    }
-
-    .form-floating > label {
-        color: #667085;
-        padding: 1rem .85rem;
-    }
-
-    .form-control,
-    .form-select {
-        border-radius: 12px;
-        border-color: #dbe1e7;
-        box-shadow: none !important;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #86b7fe;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.12) !important;
-    }
-
-    .is-invalid,
-    .was-validated .form-control:invalid,
-    .was-validated .form-select:invalid {
-        border-color: #dc3545 !important;
-    }
-
-    .invalid-feedback {
-        display: block;
-        font-size: .8rem;
-        margin-top: .4rem;
-    }
-
-    .form-section {
-        display: none;
-    }
-
-    .form-section.active {
-        display: block;
-    }
-
-    .form-tabs {
-        display: flex;
-        gap: .75rem;
-        flex-wrap: wrap;
-        margin-bottom: 1rem;
-    }
-
-    .form-tab-btn {
-        min-width: 190px;
-        height: 52px;
-        border: 1px solid #dbe1e7;
-        background: #fff;
-        color: #344054;
-        border-radius: 999px;
-        padding: 0 1rem;
-        font-size: .95rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: .2s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        white-space: nowrap;
-    }
-
-    .form-tab-btn.active {
-        background: #e8f0ff;
-        border-color: #bfd4ff;
-        color: #0d6efd;
-    }
-
-    .select2-float {
-        position: relative;
-    }
-
-    .select2-float-label {
-        position: absolute;
-        top: 1rem;
-        left: .85rem;
-        font-size: 1rem;
-        color: #667085;
-        line-height: 1;
-        background: #fff;
-        padding: 0 .25rem;
-        transition: all .18s ease;
-        pointer-events: none;
-        z-index: 5;
-    }
-
-    .select2-float.active .select2-float-label,
-    .select2-float.focused .select2-float-label {
-        top: 0;
-        transform: translateY(-50%);
-        font-size: .75rem;
-        color: #667085;
-        font-weight: 400;
-    }
-
-    .select2-float.required .select2-float-label::after {
-        content: " *";
-        color: #dc3545;
-    }
-
-    .select2-container {
-        width: 100% !important;
-    }
-
-    .select2-container .select2-selection--single {
-        height: calc(3.5rem + 2px) !important;
-        min-height: calc(3.5rem + 2px) !important;
-        border-radius: 12px !important;
-        border: 1px solid #dbe1e7 !important;
-        background: #fff !important;
-        box-shadow: none !important;
-        display: flex !important;
-        align-items: flex-end !important;
-        padding-top: 1.625rem !important;
-        padding-bottom: .625rem !important;
-    }
-
-    .select2-container .select2-selection__rendered {
-        width: 100% !important;
-        padding-left: .85rem !important;
-        padding-right: 2.25rem !important;
-        line-height: 1.25 !important;
-        font-size: 1rem !important;
-        color: #212529 !important;
-        display: block !important;
-        text-align: left !important;
-    }
-
-    .select2-container .select2-selection__placeholder {
-        color: transparent !important;
-    }
-
-    .select2-container .select2-selection__arrow {
-        height: 100% !important;
-        right: 10px !important;
-        top: 0 !important;
-    }
-
-    .select2-container .select2-selection__clear {
-        position: absolute;
-        right: 28px;
-        top: 50%;
-        transform: translateY(-50%);
-        margin: 0 !important;
-    }
-
-    .select2-container .select2-selection--multiple {
-        min-height: calc(3.5rem + 2px) !important;
-        border-radius: 12px !important;
-        border: 1px solid #dbe1e7 !important;
-        padding: 10px 10px 6px 10px !important;
-    }
-
-    .select2-container--default.select2-container--focus .select2-selection,
-    .select2-container--default.select2-container--open .select2-selection {
-        border-color: #86b7fe !important;
-        box-shadow: 0 0 0 0.2rem rgba(13,110,253,.12) !important;
-    }
-
-    @media (max-width: 768px) {
-        .page-hero {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .sticky-actions-inner {
-            justify-content: stretch;
-        }
-
-        .sticky-actions-inner .btn {
-            flex: 1;
-        }
-
-        .form-tabs {
-            display: grid;
-            grid-template-columns: 1fr;
-        }
-
-        .form-tab-btn {
-            width: 100%;
-            min-width: 0;
-        }
-    }
 </style>
 
 <div class="generic-form-page">
@@ -371,7 +170,6 @@ if (empty($sections)) {
                 <span>Form</span>
                 <span><?= esc($title) ?></span>
             </div>
-
             <h2 class="page-title"><?= esc($title) ?></h2>
 
             <?php if ($subtitle): ?>
@@ -380,107 +178,139 @@ if (empty($sections)) {
         </div>
 
         <div class="d-flex gap-2">
-            <?= view('custom/components/ui/button', [
-                'href' => $backUrl === '#' ? '#' : site_url($backUrl),
-                'label' => 'Back',
-                'variant' => 'outline-secondary',
-                'icon' => 'bi bi-arrow-left',
-            ]) ?>
+            <a class="btn btn-outline-secondary"
+               href="<?= $backUrl === '#' ? '#' : site_url($backUrl) ?>">
+                <i class="bi bi-arrow-left me-1"></i> Back
+            </a>
         </div>
     </div>
 
-    <?php if (count($sections) > 1): ?>
-        <?= view('custom/components/ui/tabs', ['sections' => $sections]) ?>
-    <?php endif; ?>
-
-    <form method="post" enctype="multipart/form-data" novalidate>
+    <form method="post" enctype="multipart/form-data">
         <?= csrf_field() ?>
 
-        <?php foreach ($sections as $sectionIndex => $section): ?>
-            <?= view('custom/components/form/section', [
-                'section' => $section,
-                'sectionIndex' => $sectionIndex,
-            ]) ?>
-        <?php endforeach; ?>
+        <div class="modern-card">
+            <div class="section-header">
+                <h3 class="section-title">Form Details</h3>
+                <div class="section-subtitle">Fill in the required information below</div>
+            </div>
 
-        <?= view('custom/components/form/actions', [
-            'backUrl' => $backUrl,
-            'submitLabel' => $submitLabel,
-        ]) ?>
+            <div class="card-body">
+                <div class="row g-4">
+                    <?php foreach ($fields as $field): ?>
+                        <?php
+                        $type        = $field['type'] ?? 'text';
+                        $name        = $field['name'] ?? '';
+                        $label       = $field['label'] ?? ucfirst($name);
+                        $value       = $field['value'] ?? '';
+                        $required    = !empty($field['required']);
+                        $col         = $field['col'] ?? 'col-12';
+                        $placeholder = $field['placeholder'] ?? '';
+                        $help        = $field['help'] ?? '';
+                        $options     = $field['options'] ?? [];
+                        $rows        = $field['rows'] ?? 4;
+
+                        if ($name !== '') {
+                            $value = old($name, $value);
+                        }
+                        ?>
+
+                        <div class="<?= esc($col) ?>">
+                            <div class="field-shell <?= $type === 'checkbox' ? 'is-checkbox' : '' ?>">
+                                <?php if ($type !== 'checkbox'): ?>
+                                    <label class="form-label">
+                                        <?= esc($label) ?>
+                                        <?php if ($required): ?>
+                                            <span class="text-danger">*</span>
+                                        <?php endif; ?>
+                                    </label>
+                                <?php endif; ?>
+
+                                <?php if ($type === 'textarea'): ?>
+                                    <textarea
+                                        class="form-control"
+                                        name="<?= esc($name) ?>"
+                                        rows="<?= esc((string) $rows) ?>"
+                                        placeholder="<?= esc($placeholder) ?>"
+                                        <?= $required ? 'required' : '' ?>
+                                    ><?= esc((string) $value) ?></textarea>
+
+                                <?php elseif ($type === 'select'): ?>
+                                    <select
+                                        class="form-select"
+                                        name="<?= esc($name) ?>"
+                                        <?= $required ? 'required' : '' ?>
+                                    >
+                                        <option value="">Select...</option>
+
+                                        <?php foreach ($options as $optValue => $optLabel): ?>
+                                            <option
+                                                value="<?= esc((string) $optValue) ?>"
+                                                <?= (string) $optValue === (string) $value ? 'selected' : '' ?>
+                                            >
+                                                <?= esc((string) $optLabel) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+
+                                <?php elseif ($type === 'checkbox'): ?>
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            name="<?= esc($name) ?>"
+                                            id="<?= esc($name) ?>"
+                                            value="1"
+                                            <?= !empty($value) ? 'checked' : '' ?>
+                                        >
+
+                                        <label class="form-check-label" for="<?= esc($name) ?>">
+                                            <?= esc($label) ?>
+                                        </label>
+                                    </div>
+
+                                <?php elseif ($type === 'file'): ?>
+                                    <input
+                                        type="file"
+                                        class="form-control"
+                                        name="<?= esc($name) ?>"
+                                        <?= $required ? 'required' : '' ?>
+                                    >
+
+                                <?php else: ?>
+                                    <input
+                                        type="<?= esc($type) ?>"
+                                        class="form-control"
+                                        name="<?= esc($name) ?>"
+                                        value="<?= esc((string) $value) ?>"
+                                        placeholder="<?= esc($placeholder) ?>"
+                                        <?= $required ? 'required' : '' ?>
+                                    >
+                                <?php endif; ?>
+
+                                <?php if ($help): ?>
+                                    <div class="form-text mt-2">
+                                        <?= esc($help) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="sticky-actions">
+            <div class="sticky-actions-inner">
+                <a class="btn btn-outline-secondary"
+                   href="<?= $backUrl === '#' ? '#' : site_url($backUrl) ?>">
+                    Cancel
+                </a>
+
+                <button class="btn btn-primary px-4" type="submit">
+                    <i class="bi bi-check-lg me-1"></i>
+                    <?= esc($submitLabel) ?>
+                </button>
+            </div>
+        </div>
     </form>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.form-tab-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const target = this.getAttribute('data-tab-target');
-
-            document.querySelectorAll('.form-tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-
-            this.classList.add('active');
-
-            const targetSection = document.getElementById(target);
-            if (targetSection) {
-                targetSection.classList.add('active');
-            }
-        });
-    });
-
-    if (window.jQuery && $.fn.select2) {
-        $('.js-select2').each(function () {
-            const $el = $(this);
-            const $wrap = $el.closest('.select2-float');
-
-            $el.select2({
-                width: '100%',
-                placeholder: '',
-                allowClear: !$el.prop('multiple'),
-                dropdownAutoWidth: false
-            });
-
-            function syncFloatingState() {
-                const val = $el.val();
-                const hasValue = Array.isArray(val) ? val.length > 0 : !!val;
-
-                if (hasValue) {
-                    $wrap.addClass('active');
-                } else {
-                    $wrap.removeClass('active');
-                }
-            }
-
-            syncFloatingState();
-
-            $el.on('change', syncFloatingState);
-
-            $el.on('select2:open', function () {
-                $wrap.addClass('focused');
-            });
-
-            $el.on('select2:close', function () {
-                $wrap.removeClass('focused');
-                syncFloatingState();
-            });
-        });
-    }
-
-    const firstInvalid = document.querySelector('.is-invalid');
-    if (firstInvalid) {
-        const section = firstInvalid.closest('.form-section');
-        if (section) {
-            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-            section.classList.add('active');
-
-            const sectionId = section.getAttribute('id');
-            document.querySelectorAll('.form-tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.getAttribute('data-tab-target') === sectionId);
-            });
-        }
-    }
-});
-</script>
