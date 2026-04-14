@@ -74,32 +74,42 @@ class JobController extends BaseController
     {
         helper('dropdown');
 
-        $statusOptions = dd_statuses_by_feature('jobs');
+        $statusOptions  = dd_statuses_by_feature('jobs');
         $companyOptions = $this->getCompanyOptions();
 
         if (strtolower($this->request->getMethod()) === 'post') {
-            (new JobModel())->insert([
+            $data = [
                 'name'         => trim((string) $this->request->getPost('name')),
                 'job_code'     => trim((string) $this->request->getPost('job_code')),
                 'company_id'   => $this->request->getPost('company_id') ?: null,
                 'unit_id'      => $this->request->getPost('unit_id') ?: null,
                 'group_id'     => $this->request->getPost('group_id') ?: null,
-                'description'  => $this->request->getPost('description'),
-                'requirement'  => $this->request->getPost('requirement'),
+                'description'  => trim((string) $this->request->getPost('description')),
+                'requirement'  => trim((string) $this->request->getPost('requirement')),
                 'status_id'    => $this->request->getPost('status_id') ?: null,
                 'date_created' => date('Y-m-d H:i:s'),
-            ]);
+            ];
+
+            if (empty($data['name']) || empty($data['job_code']) || empty($data['company_id']) || empty($data['unit_id']) || empty($data['group_id'])) {
+                return redirect()->back()->withInput()->with('error', 'Please fill in all required fields.');
+            }
+
+            $model = new JobModel();
+
+            if (! $model->insert($data)) {
+                return redirect()->back()->withInput()->with('error', 'Failed to create job.');
+            }
 
             return redirect()->to('/admin/jobs')->with('success', 'Job created.');
         }
 
         return view('admin/jobs/form', [
-            'mode' => 'create',
-            'job' => null,
-            'statusOptions' => $statusOptions,
+            'mode'           => 'create',
+            'job'            => null,
+            'statusOptions'  => $statusOptions,
             'companyOptions' => $companyOptions,
-            'unitOptions' => ['' => 'Select Unit'],
-            'groupOptions' => ['' => 'Select Group'],
+            'unitOptions'    => ['' => 'Select Unit'],
+            'groupOptions'   => ['' => 'Select Group'],
         ]);
     }
 
@@ -107,42 +117,49 @@ class JobController extends BaseController
     {
         helper('dropdown');
 
-        $statusOptions = dd_statuses_by_feature('jobs');
-
         $model = new JobModel();
-        $job = $model->where('date_deleted', null)->find((int) $id);
+        $job   = $model->where('date_deleted', null)->find((int) $id);
 
         if (! $job) {
             return redirect()->to('/admin/jobs')->with('error', 'Job not found.');
         }
 
+        $statusOptions  = dd_statuses_by_feature('jobs');
         $companyOptions = $this->getCompanyOptions();
-        $unitOptions = $this->getUnitOptionsByCompanyId($job['company_id'] ?? null);
-        $groupOptions = $this->getGroupOptionsByUnitId($job['unit_id'] ?? null);
+        $unitOptions    = $this->getUnitOptionsByCompanyId($job['company_id'] ?? null);
+        $groupOptions   = $this->getGroupOptionsByUnitId($job['unit_id'] ?? null);
 
         if (strtolower($this->request->getMethod()) === 'post') {
-            $model->update((int) $id, [
+            $data = [
                 'name'         => trim((string) $this->request->getPost('name')),
                 'job_code'     => trim((string) $this->request->getPost('job_code')),
                 'company_id'   => $this->request->getPost('company_id') ?: null,
                 'unit_id'      => $this->request->getPost('unit_id') ?: null,
                 'group_id'     => $this->request->getPost('group_id') ?: null,
-                'description'  => $this->request->getPost('description'),
-                'requirement'  => $this->request->getPost('requirement'),
+                'description'  => trim((string) $this->request->getPost('description')),
+                'requirement'  => trim((string) $this->request->getPost('requirement')),
                 'status_id'    => $this->request->getPost('status_id') ?: null,
                 'date_updated' => date('Y-m-d H:i:s'),
-            ]);
+            ];
+
+            if (empty($data['name']) || empty($data['job_code']) || empty($data['company_id']) || empty($data['unit_id']) || empty($data['group_id'])) {
+                return redirect()->back()->withInput()->with('error', 'Please fill in all required fields.');
+            }
+
+            if (! $model->update((int) $id, $data)) {
+                return redirect()->back()->withInput()->with('error', 'Failed to update job.');
+            }
 
             return redirect()->to('/admin/jobs')->with('success', 'Job updated.');
         }
 
         return view('admin/jobs/form', [
-            'mode' => 'edit',
-            'job' => $job,
-            'statusOptions' => $statusOptions,
+            'mode'           => 'edit',
+            'job'            => $job,
+            'statusOptions'  => $statusOptions,
             'companyOptions' => $companyOptions,
-            'unitOptions' => $unitOptions,
-            'groupOptions' => $groupOptions,
+            'unitOptions'    => $unitOptions,
+            'groupOptions'   => $groupOptions,
         ]);
     }
 
@@ -175,7 +192,7 @@ class JobController extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'units' => $units,
+            'units'   => $units,
         ]);
     }
 
@@ -199,7 +216,7 @@ class JobController extends BaseController
 
         return $this->response->setJSON([
             'success' => true,
-            'groups' => $groups,
+            'groups'  => $groups,
         ]);
     }
 

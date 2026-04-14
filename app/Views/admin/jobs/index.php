@@ -16,7 +16,8 @@
     'rows' => $jobs ?? [],
     'columns' => [
         ['key' => 'id', 'label' => 'ID'],
-        ['key' => 'name', 'label' => 'Name', 'formatter' => fn($row, $value) => '<a href=`/edit/id`><span class="fw-semibold">' . esc($value) . '</span></a>'],
+        // ['key' => 'name', 'label' => 'Name', 'formatter' => fn($row, $value) => '<a href=`/edit/id`><span class="fw-semibold">' . esc($value) . '</span></a>'],
+        ['key' => 'name', 'label' => 'name'],
         ['key' => 'job_code', 'label' => 'Code'],
         ['key' => 'requirement', 'label' => 'Requirement'],
         ['key' => 'status_name', 'label' => 'Status'],

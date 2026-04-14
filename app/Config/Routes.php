@@ -173,8 +173,12 @@ $routes->group('admin', ['namespace' => 'App\Controllers\Admin'], function ($rou
         //Profile
         $routes->get('profile', 'ProfileController::index');
         $routes->post('profile/change-password', 'ProfileController::updatePassword');
+        //Reports
+        $routes->get('reports/talent-acquisition', 'ReportController::talentAcquisition');
+        $routes->get('reports/talent-acquisition/download', 'ReportController::downloadTalentAcquisitionPdf');
+   
         });
-    //APIs Routes
+         //APIs Routes
     $routes->group('api', ['namespace' => 'App\Controllers\Api'], function ($routes) {
         // var_dump('here');
         // die();

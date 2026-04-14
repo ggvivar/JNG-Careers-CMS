@@ -4,6 +4,7 @@
 <?php
 helper('rbac');
 
+
 $featureMap = [
     'users' => 'users',
     'roles' => 'roles',
@@ -13,6 +14,17 @@ $featureMap = [
     'applications' => 'applications',
     'my_processing' => 'applications',
     'contents' => 'contents',
+];
+
+$featureUrls = [
+    'users' => 'admin/users',
+    'roles' => 'admin/roles',
+    'jobs' => 'admin/jobs',
+    'job_posts' => 'admin/job-posts',
+    'applicants' => 'admin/applicants',
+    'applications' => 'admin/applications',
+    'my_processing' => 'admin/applications/assigned-to-me',
+    'contents' => 'admin/contents',
 ];
 
 $icons = [
@@ -86,9 +98,15 @@ $quickLinks = [
     if ($featureCode && !rbac_can_feature($featureCode, 'can_view')) {
         continue;
     }
+
+    $cardUrl = $featureUrls[$label] ?? null;
   ?>
   <div class="col-12 col-sm-6 col-xl-3">
-    <div class="dashboard-card">
+    <?php if ($cardUrl): ?>
+      <a href="<?= site_url($cardUrl) ?>" class="text-decoration-none text-reset d-block h-100">
+    <?php endif; ?>
+
+    <div class="dashboard-card h-100 dashboard-card-clickable">
       <div class="d-flex justify-content-between align-items-center">
         <div>
           <div class="text-muted small text-uppercase">
@@ -104,6 +122,10 @@ $quickLinks = [
         </div>
       </div>
     </div>
+
+    <?php if ($cardUrl): ?>
+      </a>
+    <?php endif; ?>
   </div>
 <?php endforeach; ?>
 </div>
@@ -119,9 +141,15 @@ $quickLinks = [
       if ($featureCode && !rbac_can_feature($featureCode, 'can_approve') && !rbac_can_feature($featureCode, 'can_view')) {
           continue;
       }
+
+      $cardUrl = $featureUrls[$label] ?? null;
     ?>
     <div class="col-12 col-sm-6 col-xl-3">
-      <div class="dashboard-card">
+      <?php if ($cardUrl): ?>
+        <a href="<?= site_url($cardUrl) ?>" class="text-decoration-none text-reset d-block h-100">
+      <?php endif; ?>
+
+      <div class="dashboard-card h-100 dashboard-card-clickable">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <div class="text-muted small text-uppercase">
@@ -137,6 +165,10 @@ $quickLinks = [
           </div>
         </div>
       </div>
+
+      <?php if ($cardUrl): ?>
+        </a>
+      <?php endif; ?>
     </div>
   <?php endforeach; ?>
 </div>
@@ -230,7 +262,138 @@ $quickLinks = [
   </div>
 </div>
 <?php endif; ?>
+<div class="card border-0 shadow-sm mb-4" style="border-radius:16px;">
+    <div class="card-body p-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+            <div>
+                <h5 class="mb-1">Talent Acquisition Report</h5>
+                <div class="text-muted small">Quick view of recruitment operations</div>
+            </div>
 
+            <a href="<?= site_url('admin/reports/talent-acquisition') ?>" class="btn btn-sm btn-primary">
+                <i class="bi bi-bar-chart-line me-1"></i>
+                Open Report
+            </a>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="border rounded-4 p-3 h-100 bg-white">
+                    <div class="text-muted small text-uppercase mb-1">Applications</div>
+                    <div class="fs-4 fw-bold"><?= esc((string) ($stats['applications'] ?? 0)) ?></div>
+                    <div class="small text-muted">Total active applications</div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="border rounded-4 p-3 h-100 bg-white">
+                    <div class="text-muted small text-uppercase mb-1">My Processing</div>
+                    <div class="fs-4 fw-bold text-primary"><?= esc((string) ($stats['my_processing'] ?? 0)) ?></div>
+                    <div class="small text-muted">Assigned to me</div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="border rounded-4 p-3 h-100 bg-white">
+                    <div class="text-muted small text-uppercase mb-1">For Review</div>
+                    <div class="fs-4 fw-bold text-warning"><?= esc((string) ($stats_for_approval['applications'] ?? 0)) ?></div>
+                    <div class="small text-muted">Pending approval / review</div>
+                </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="border rounded-4 p-3 h-100 bg-white">
+                    <div class="text-muted small text-uppercase mb-1">Applications Overdue</div>
+                    <div class="fs-4 fw-bold text-danger"><?= esc((string) ($overdueStats['applications_overdue'] ?? 0)) ?></div>
+                    <div class="small text-muted">Past due date</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-12 col-xl-6">
+                <div class="border rounded-4 h-100">
+                    <div class="p-3 border-bottom bg-light rounded-top-4">
+                        <div class="fw-semibold">Recruitment Highlights</div>
+                    </div>
+                    <div class="p-3">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted">Total Applications</span>
+                            <span class="fw-semibold"><?= esc((string) ($stats['applications'] ?? 0)) ?></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted">My Processing</span>
+                            <span class="fw-semibold"><?= esc((string) ($stats['my_processing'] ?? 0)) ?></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted">For Review</span>
+                            <span class="fw-semibold"><?= esc((string) ($stats_for_approval['applications'] ?? 0)) ?></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <span class="text-muted">Applications Overdue</span>
+                            <span class="fw-semibold text-danger"><?= esc((string) ($overdueStats['applications_overdue'] ?? 0)) ?></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center py-2">
+                            <span class="text-muted">My Overdue</span>
+                            <span class="fw-semibold text-warning"><?= esc((string) ($myProcessingOverdue ?? 0)) ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-6">
+                <div class="border rounded-4 h-100">
+                    <div class="p-3 border-bottom bg-light rounded-top-4 d-flex justify-content-between align-items-center">
+                        <div class="fw-semibold">Top Overdue Applications</div>
+                        <a href="<?= site_url('admin/applications?overdue=1') ?>" class="btn btn-sm btn-outline-danger">
+                            View All
+                        </a>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Applicant</th>
+                                    <th>Job</th>
+                                    <th>Due At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($overdueApplications)): ?>
+                                    <?php foreach (array_slice($overdueApplications, 0, 5) as $row): ?>
+                                        <tr>
+                                            <td>
+                                                <a href="<?= site_url('admin/applications/' . (int) $row['id']) ?>" class="text-decoration-none fw-semibold">
+                                                    #<?= (int) $row['id'] ?>
+                                                </a>
+                                            </td>
+                                            <td><?= esc(trim(($row['firstname'] ?? '') . ' ' . ($row['lastname'] ?? '')) ?: '-') ?></td>
+                                            <td><?= esc($row['job_name'] ?? '-') ?></td>
+                                            <td>
+                                                <span class="badge text-bg-danger">Overdue</span>
+                                                <div class="small text-danger mt-1"><?= esc($row['due_at'] ?? '-') ?></div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">No overdue applications found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <?php
 $visibleQuickLinks = array_filter($quickLinks, function ($item) {
     return empty($item['feature']) || rbac_can_feature($item['feature'], 'can_view');

@@ -62,6 +62,10 @@ if (! function_exists('module_has_active_feature')) {
             return true;
         }
 
+        if (admin_is_active('admin/reports/talent-acquisition', $path) === 'active') {
+            return true;
+        }
+
         return false;
     }
 }
@@ -481,8 +485,12 @@ body{
 
             <?php foreach ($careerFeatures as $feature): ?>
     <?php if (($feature['code'] ?? '') === 'applications' && rbac_can_feature('applications', 'can_view')): ?>
-        <?php $applicationsOpen = admin_is_active('admin/applications', $path) === 'active' || admin_is_active('admin/applications/assigned-to-me', $path) === 'active'; ?>
-
+        <?php
+        $applicationsOpen =
+            admin_is_active('admin/applications', $path) === 'active' ||
+            admin_is_active('admin/applications/assigned-to-me', $path) === 'active' ||
+            admin_is_active('admin/reports/talent-acquisition', $path) === 'active';
+        ?>
         <button class="menu-toggle <?= $applicationsOpen ? 'active' : '' ?>"
                 type="button"
                 data-bs-toggle="collapse"
@@ -497,15 +505,21 @@ body{
         <div class="collapse <?= $applicationsOpen ? 'show' : '' ?>" id="mobileApplicationsSubmenu">
             <div class="submenu">
                 <a class="list-group-item <?= admin_is_active('admin/applications', $path) ?>"
-                   href="<?= site_url('admin/applications') ?>">
+                href="<?= site_url('admin/applications') ?>">
                     <i class="bi bi-list-ul"></i>
                     All Applications
                 </a>
 
                 <a class="list-group-item <?= admin_is_active('admin/applications/assigned-to-me', $path) ?>"
-                   href="<?= site_url('admin/applications/assigned-to-me') ?>">
+                href="<?= site_url('admin/applications/assigned-to-me') ?>">
                     <i class="bi bi-person-workspace"></i>
                     My Processing
+                </a>
+
+                <a class="list-group-item <?= admin_is_active('admin/reports/talent-acquisition', $path) ?>"
+                href="<?= site_url('admin/reports/talent-acquisition') ?>">
+                    <i class="bi bi-bar-chart-line"></i>
+                    Talent Acquisition Report
                 </a>
             </div>
         </div>
@@ -606,7 +620,12 @@ body{
 
                 <?php foreach ($careerFeatures as $feature): ?>
     <?php if (($feature['code'] ?? '') === 'applications' && rbac_can_feature('applications', 'can_view')): ?>
-        <?php $applicationsOpen = admin_is_active('admin/applications', $path) === 'active' || admin_is_active('admin/applications/assigned-to-me', $path) === 'active'; ?>
+        <?php
+$applicationsOpen =
+    admin_is_active('admin/applications', $path) === 'active' ||
+    admin_is_active('admin/applications/assigned-to-me', $path) === 'active' ||
+    admin_is_active('admin/reports/talent-acquisition', $path) === 'active';
+?>
 
         <button class="menu-toggle <?= $applicationsOpen ? 'active' : '' ?>"
                 type="button"
@@ -620,20 +639,26 @@ body{
         </button>
 
         <div class="collapse <?= $applicationsOpen ? 'show' : '' ?>" id="desktopApplicationsSubmenu">
-            <div class="submenu">
-                <a class="list-group-item <?= admin_is_active('admin/applications', $path) ?>"
-                   href="<?= site_url('admin/applications') ?>">
-                    <i class="bi bi-list-ul"></i>
-                    All Applications
-                </a>
+    <div class="submenu">
+        <a class="list-group-item <?= admin_is_active('admin/applications', $path) ?>"
+           href="<?= site_url('admin/applications') ?>">
+            <i class="bi bi-list-ul"></i>
+            All Applications
+        </a>
 
-                <a class="list-group-item <?= admin_is_active('admin/applications/assigned-to-me', $path) ?>"
-                   href="<?= site_url('admin/applications/assigned-to-me') ?>">
-                    <i class="bi bi-person-workspace"></i>
-                    My Processing
-                </a>
-            </div>
-        </div>
+        <a class="list-group-item <?= admin_is_active('admin/applications/assigned-to-me', $path) ?>"
+           href="<?= site_url('admin/applications/assigned-to-me') ?>">
+            <i class="bi bi-person-workspace"></i>
+            My Processing
+        </a>
+
+        <a class="list-group-item <?= admin_is_active('admin/reports/talent-acquisition', $path) ?>"
+           href="<?= site_url('admin/reports/talent-acquisition') ?>">
+            <i class="bi bi-bar-chart-line"></i>
+            Talent Acquisition Report
+        </a>
+    </div>
+</div>
     <?php else: ?>
         <a class="list-group-item <?= admin_is_active('admin/' . $feature['code'], $path) ?>"
            href="<?= site_url('admin/' . $feature['code']) ?>">

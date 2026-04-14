@@ -18,6 +18,7 @@
         ['key' => 'department_name', 'label' => 'Department'],
         ['key' => 'location', 'label' => 'Location'],
         ['key' => 'salary_range', 'label' => 'Salary'],
+        ['key' => 'level_id', 'label' => 'Level'],
         ['key' => 'experience_range', 'label' => 'Experience'],
         ['key' => 'rank_hiring', 'label' => 'Rank'],
         ['key' => 'headcount_required', 'label' => 'Headcount'],

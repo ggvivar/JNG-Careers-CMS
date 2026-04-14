@@ -18,6 +18,8 @@ $validTo = !empty($post['valid_to']) ? date('Y-m-d\TH:i', strtotime($post['valid
         ['type' => 'text', 'name' => 'location', 'label' => 'Location', 'col' => 'col-12 col-lg-6', 'value' => $post['location'] ?? ''],
         ['type' => 'text', 'name' => 'salary_range', 'label' => 'Salary Range', 'col' => 'col-12 col-lg-4', 'value' => $post['salary_range'] ?? ''],
         ['type' => 'text', 'name' => 'experience_range', 'label' => 'Experience Range', 'col' => 'col-12 col-lg-4', 'value' => $post['experience_range'] ?? ''],
+        ['type' => 'text', 'name' => 'level', 'label' => 'Level', 'col' => 'col-12 col-lg-4', 'value' => $post['level'] ?? ''],
+        ['type' => 'select', 'name' => 'level', 'label' => 'Level', 'col' => 'col-12 col-lg-6', 'options' => $levelOptions ?? [], 'value' => $post['level_id'] ?? ''],
         ['type' => 'number', 'name' => 'rank_hiring', 'label' => 'Rank Hiring', 'col' => 'col-12 col-lg-2', 'value' => $post['rank_hiring'] ?? ''],
         ['type' => 'number', 'name' => 'headcount_required', 'label' => 'Headcount Required', 'col' => 'col-12 col-lg-2', 'value' => $post['headcount_required'] ?? '', 'min' => 1],
         ['type' => 'select', 'name' => 'status_id', 'label' => 'Status', 'col' => 'col-12 col-lg-6', 'options' => $statusOptions ?? [], 'value' => $post['status_id'] ?? ''],

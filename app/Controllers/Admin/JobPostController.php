@@ -96,6 +96,7 @@ class JobPostController extends BaseController
             'statusOptions' => $statusOptions,
             'companyOptions' => $companyOptions,
             'departmentOptions' => $departmentOptions,
+            'levelOptions' => dd_common_defaults('Level'),
         ]);
     }
 

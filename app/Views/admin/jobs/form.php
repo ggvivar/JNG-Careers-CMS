@@ -1,10 +1,15 @@
 <?= $this->extend('admin/partials/layout') ?>
 <?= $this->section('content') ?>
-
+<?php
+$formAction = $mode === 'edit'
+    ? site_url('admin/jobs/edit/' . ($job['id'] ?? 0))
+    : site_url('admin/jobs/create');
+?>
 <?= view('admin/partials/form_template', [
     'title' => $mode === 'edit' ? 'Edit Job' : 'Create Job',
     'subtitle' => 'Job template information',
     'backUrl' => 'admin/jobs',
+    'formAction' => $formAction,
     'fields' => [
         [
             'type' => 'text',
@@ -58,7 +63,7 @@
             'value' => $job['status_id'] ?? '',
         ],
         [
-            'type' => 'textarea',
+            'type' => 'richtext',
             'name' => 'description',
             'label' => 'Description',
             'col' => 'col-12',
@@ -66,7 +71,7 @@
             'rows' => 4,
         ],
         [
-            'type' => 'textarea',
+            'type' => 'richtext',
             'name' => 'requirement',
             'label' => 'Requirement',
             'col' => 'col-12',
