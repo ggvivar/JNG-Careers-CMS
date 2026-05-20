@@ -63,75 +63,216 @@ private function respondGroupedByCategoryAndYear(array $rows)
     $grouped = [];
 
     foreach ($rows as $row) {
-        $categoryName = strtolower($row['category_name'] ?? 'uncategorized');
-        $year = !empty($row['validity_date_start']) ? (int) date('Y', strtotime($row['validity_date_start'])) : null;
-        // dd($row);
-        if (!$year) {
-            continue;
-        }
 
-        if (!isset($grouped[$categoryName][$year])) {
-            $grouped[$categoryName][$year] = [
-                'id' => $year,
-                'year' => $year,
-                'items' => []
+        $categoryId = $row['category_id'] ?? 0;
+        $categoryKey = 'cat_' . $categoryId;
+
+        $year = !empty($row['validity_date_start'])
+            ? (int) date('Y', strtotime($row['validity_date_start']))
+            : (int) date('Y', strtotime($row['date_created']));
+
+        if (!isset($grouped[$categoryKey])) {
+            $grouped[$categoryKey] = [
+                'category' => [
+                    'id' => $categoryId,
+                    'name' => $row['category_name'] ?? '',
+                    'slug' => url_title($row['category_name'] ?? '', '-', true),
+                    'listingTitle' => $row['category_name'] ?? '',
+                ],
+                'years' => []
             ];
         }
 
-        $grouped[$categoryName][$year]['items'][] = [
+        if (!isset($grouped[$categoryKey]['years'][$year])) {
+            $grouped[$categoryKey]['years'][$year] = [
+                'id' => $year,
+                'year' => $year,
+                'articles' => []
+            ];
+        }
+
+        $images = [];
+
+        if (!empty($row['images'])) {
+            $decodedImages = json_decode($row['images'], true);
+
+            if (is_array($decodedImages)) {
+                foreach ($decodedImages as $img) {
+                    $images[] = [
+                        'url' => !empty($img['path'])
+                            ? base_url($img['path'])
+                            : ($img['url'] ?? ''),
+                        'caption' => $img['caption'] ?? '',
+                        'order' => $img['order'] ?? null,
+                    ];
+                }
+            }
+        }
+
+        $sections = [];
+
+        foreach (($row['subsections'] ?? []) as $section) {
+
+            $sectionImages = [];
+
+            if (!empty($section['images'])) {
+                $decodedSectionImages = json_decode($section['images'], true);
+
+                if (is_array($decodedSectionImages)) {
+                    foreach ($decodedSectionImages as $img) {
+                        $sectionImages[] = [
+                            'url' => !empty($img['path'])
+                                ? base_url($img['path'])
+                                : ($img['url'] ?? ''),
+                            'caption' => $img['caption'] ?? '',
+                            'order' => $img['order'] ?? null,
+                        ];
+                    }
+                }
+            }
+
+            $sections[] = [
+                'id' => $section['id'],
+                'title' => $section['title'],
+                'content' => $section['description'] ?? '',
+                'excerpt' => $section['lead'] ?? '',
+                'images' => $sectionImages,
+                'order' => $section['rank'] ?? null,
+            ];
+        }
+
+        $tags = [];
+
+        foreach (($row['tags'] ?? []) as $idx => $tag) {
+
+            if (is_array($tag)) {
+                $tags[] = [
+                    'id' => $tag['id'] ?? ($idx + 1),
+                    'name' => $tag['name'] ?? '',
+                    'slug' => $tag['slug'] ?? url_title($tag['name'] ?? '', '-', true),
+                ];
+            } else {
+                $tags[] = [
+                    'id' => $idx + 1,
+                    'name' => $tag,
+                    'slug' => url_title($tag, '-', true),
+                ];
+            }
+        }
+
+        $grouped[$categoryKey]['years'][$year]['articles'][] = [
             'id' => $row['id'],
             'title' => $row['title'],
             'slug' => $row['slug'],
-            'lead' => $row['lead'],
-            'description' => $row['description'],
-            'image' => $row['image'],
-            'date' => !empty($row['validity_date_start']) ? date('Y-m-d', strtotime($row['validity_date_start'])) : null,
-            'tags' => $row['tags'] ?? [],
-            'rank' => $row['rank'],
-            'sections' => array_map(function ($section) {
-                return [
-                    'id' => $section['id'],
-                    'title' => $section['title'],
-                    'description' => $section['description'],
-                    'image' => $section['image'],
-                    'date' => !empty($section['validity_date_start']) ? date('Y-m-d', strtotime($section['validity_date_start'])) : null,
-                ];
-            }, $row['subsections'] ?? [])
+            'lead' => $row['lead'] ?? '',
+            'excerpt' => $row['excerpt'] ?? '',
+            'content' => $row['description'] ?? '',
+            'images' => $images,
+            'tags' => $tags,
+            'sections' => $sections,
+            'rank' => $row['rank'] ?? null,
+            'status' => strtolower($row['status_name'] ?? 'published'),
+            'publishedAt' => $row['validity_date_start'] ?? null,
+            'expiresAt' => $row['validity_date_end'] ?? null,
+            'createdAt' => $row['date_created'] ?? null,
+            'updatedAt' => $row['date_updated'] ?? null,
         ];
     }
 
     $result = [];
 
-    // foreach ($grouped as $categoryName => $years) {
-    //     krsort($years); // latest year first
+    foreach ($grouped as $category) {
 
-    //     //  foreach ($years as $yearData) {
-    //     //     $result[] = [
-    //     //         'category_name' => $categoryName,
-    //     //         'years' => $yearData
-    //     //     ];
-    //     // }
-    //     // foreach ($years as $yearData) {
-    //         $result[] = [
-    //             'category_name' => $categoryName,
-    //             'years' => $years
-    //         ];
-    //     // }
-    // }
-        foreach ($grouped as $categoryName => $years) {
-            krsort($years); // latest year first
+        krsort($category['years']);
 
-            $result[] = [
-                'category_name' => $categoryName,
-                'years' => array_values($years) 
-            ];
-        }
+        $category['years'] = array_values($category['years']);
+
+        $result[] = $category;
+    }
+
     return $this->response->setJSON([
         'status' => true,
-        'category' => 'category',
-        'data' => $result
+        'count' => count($result),
+        'data' => array_values($result),
     ]);
 }
+// private function respondGroupedByCategoryAndYear(array $rows)
+// {
+//     $rows = $this->attachSubsections($rows);
+
+//     $grouped = [];
+
+//     foreach ($rows as $row) {
+//         $categoryName = strtolower($row['category_name'] ?? 'uncategorized');
+//         $year = !empty($row['validity_date_start']) ? (int) date('Y', strtotime($row['validity_date_start'])) : null;
+//         // dd($row);
+//         if (!$year) {
+//             continue;
+//         }
+
+//         if (!isset($grouped[$categoryName][$year])) {
+//             $grouped[$categoryName][$year] = [
+//                 'id' => $year,
+//                 'year' => $year,
+//                 'items' => []
+//             ];
+//         }
+
+//         $grouped[$categoryName][$year]['items'][] = [
+//             'id' => $row['id'],
+//             'title' => $row['title'],
+//             'slug' => $row['slug'],
+//             'lead' => $row['lead'],
+//             'excerpt' => $row['excerpt'],
+//             'description' => $row['description'],
+//             'image' => $row['image'],
+//             'date' => !empty($row['validity_date_start']) ? date('Y-m-d', strtotime($row['validity_date_start'])) : null,
+//             'tags' => $row['tags'] ?? [],
+//             'rank' => $row['rank'],
+//             'sections' => array_map(function ($section) {
+//                 return [
+//                     'id' => $section['id'],
+//                     'title' => $section['title'],
+//                     'description' => $section['description'],
+//                     'image' => $section['image'],
+//                     'date' => !empty($section['validity_date_start']) ? date('Y-m-d', strtotime($section['validity_date_start'])) : null,
+//                 ];
+//             }, $row['subsections'] ?? [])
+//         ];
+//     }
+
+//     $result = [];
+
+//     // foreach ($grouped as $categoryName => $years) {
+//     //     krsort($years); // latest year first
+
+//     //     //  foreach ($years as $yearData) {
+//     //     //     $result[] = [
+//     //     //         'category_name' => $categoryName,
+//     //     //         'years' => $yearData
+//     //     //     ];
+//     //     // }
+//     //     // foreach ($years as $yearData) {
+//     //         $result[] = [
+//     //             'category_name' => $categoryName,
+//     //             'years' => $years
+//     //         ];
+//     //     // }
+//     // }
+//         foreach ($grouped as $categoryName => $years) {
+//             krsort($years); // latest year first
+
+//             $result[] = [
+//                 'category_name' => $categoryName,
+//                 'years' => array_values($years) 
+//             ];
+//         }
+//     return $this->response->setJSON([
+//         'status' => true,
+//         'category' => 'category',
+//         'data' => $result
+//     ]);
+// }
     public function year($year)
     {
         $year = (int) $year;
@@ -185,8 +326,10 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 c.slug,
                 c.description as lead,
                 c.body as description,
+                c.excerpt,
                 c.image_path,
                 c.image_url as image,
+                c.images,
                 c.external_link as link,
                 c.tags,
                 c.rank,
@@ -244,6 +387,9 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 c.main_content_id,
                 c.name as title,
                 c.slug,
+                c.images,
+                c.excerpt,
+                c.category_id,
                 c.description as lead,
                 c.body as description,
                 c.image_path,
