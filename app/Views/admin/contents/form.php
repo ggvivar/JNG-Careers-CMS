@@ -447,7 +447,7 @@ if (empty($existingImages)) {
                                                        class="form-control subsection-name-input"
                                                        value="<?= esc($sub['name'] ?? '') ?>"
                                                        placeholder="Title"
-                                                       oninput="autoSlugSubsection(this)" required>
+                                                       oninput="autoSlugSubsection(this)">
                                             </div>
                                             <div class="col-12 col-lg-6">
                                                 <label class="form-label">Slug</label>

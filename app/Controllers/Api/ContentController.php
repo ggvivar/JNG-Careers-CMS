@@ -59,11 +59,9 @@ class ContentController extends BaseController
 private function respondGroupedByCategoryAndYear(array $rows)
 {
     $rows = $this->attachSubsections($rows);
-
     $grouped = [];
 
     foreach ($rows as $row) {
-
         $categoryId = $row['category_id'] ?? 0;
         $categoryKey = 'cat_' . $categoryId;
 
@@ -178,7 +176,6 @@ private function respondGroupedByCategoryAndYear(array $rows)
             'updatedAt' => $row['date_updated'] ?? null,
         ];
     }
-
     $result = [];
 
     foreach ($grouped as $category) {
@@ -337,6 +334,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 c.validity_date_end,
                 c.date_created,
                 c.date_updated,
+                c.category_id,
                 m.name as module_name,
                 m.key1 as module_key1,
                 m.key2 as module_key2,
