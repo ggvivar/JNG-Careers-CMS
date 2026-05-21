@@ -315,14 +315,57 @@ private function respondGroupedByCategoryAndYear(array $rows)
     {
         $db = db_connect();
 
-        return $db->table('contents c')
+        // return $db->table('contents c')
+        //     ->select('
+        //         c.id,
+        //         c.main_content_id,
+        //         c.name as title,
+        //         c.slug,
+        //         c.description as lead,
+        //         c.body as description,
+        //         c.excerpt,
+        //         c.image_path,
+        //         c.image_url as image,
+        //         c.images,
+        //         c.external_link as link,
+        //         c.tags,
+        //         c.rank,
+        //         c.validity_date_start,
+        //         c.validity_date_end,
+        //         c.date_created,
+        //         c.date_updated,
+        //         c.category_id,
+        //         m.name as module_name,
+        //         m.key1 as module_key1,
+        //         m.key2 as module_key2,
+        //         m.key3 as module_key3,
+        //         cat.name as category_name,
+        //         cat.key1 as category_key1,
+        //         cat.key2 as category_key2,
+        //         cat.key3 as category_key3,
+        //         s.name as status_name,
+        //         p.name as parent_name
+        //     ')
+        //     ->join('modules m', 'm.id = c.module_id', 'left')
+        //     ->join('category cat', 'cat.id = c.category_id', 'left')
+        //     ->join('status s', 's.id = c.status_id', 'left')
+        //     ->join('contents p', 'p.id = c.main_content_id', 'left')
+        //     ->where('c.date_deleted', null)
+        //     ->where('c.main_content_id', null)
+        //     ->groupStart()
+        //         ->whereIn('s.name', ['Published'])
+        //     ->groupEnd()
+        //     ->orderBy('c.rank', 'ASC')
+        //     ->orderBy('c.id', 'DESC');
+         return $db->table('contents c')
             ->select('
                 c.id,
                 c.main_content_id,
                 c.name as title,
                 c.slug,
-                c.description as lead,
-                c.body as description,
+                c.lead,
+                c.description,
+                c.body,
                 c.excerpt,
                 c.image_path,
                 c.image_url as image,
