@@ -9,7 +9,8 @@ use Config\Paths;
  *---------------------------------------------------------------
  */
 
-$minPhpVersion = '8.2'; // If you update this, don't forget to update `spark`.
+$minPhpVersion = '8.2';
+
 if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
     $message = sprintf(
         'Your PHP version must be %s or higher to run CodeIgniter. Current version: %s',
@@ -29,31 +30,43 @@ if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
  *---------------------------------------------------------------
  */
 
-// Path to the front controller (this file)
 define('FCPATH', __DIR__ . DIRECTORY_SEPARATOR);
 
-// Ensure the current directory is pointing to the front controller's directory
 if (getcwd() . DIRECTORY_SEPARATOR !== FCPATH) {
     chdir(FCPATH);
 }
 
 /*
  *---------------------------------------------------------------
- * BOOTSTRAP THE APPLICATION
+ * AUTO DETECT BASE URL
  *---------------------------------------------------------------
- * This process sets up the path constants, loads and registers
- * our autoloader, along with Composer's, loads our constants
- * and fires up an environment-specific bootstrapping.
  */
 
-// LOAD OUR PATHS CONFIG FILE
-// This is the line that might need to be changed, depending on your folder structure.
+$https = (
+    (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || ($_SERVER['SERVER_PORT'] ?? null) == 443
+);
+
+$scheme = $https ? 'https' : 'http';
+
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+// Optional: supports subfolder install
+$path = rtrim(str_replace(basename($_SERVER['SCRIPT_NAME']), '', $_SERVER['SCRIPT_NAME']), '/');
+
+$_SERVER['CI_BASE_URL'] = $scheme . '://' . $host . $path . '/';
+
+
+/*
+ *---------------------------------------------------------------
+ * BOOTSTRAP THE APPLICATION
+ *---------------------------------------------------------------
+ */
+
 require FCPATH . '../app/Config/Paths.php';
-// ^^^ Change this line if you move your application folder
 
 $paths = new Paths();
 
-// LOAD THE FRAMEWORK BOOTSTRAP FILE
 require $paths->systemDirectory . '/Boot.php';
 
 exit(Boot::bootWeb($paths));
