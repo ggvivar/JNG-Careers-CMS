@@ -150,7 +150,7 @@ class ContentController extends BaseController
 
             foreach ($subsections as $i => $sub) {
                 $subName = trim((string) ($sub['name'] ?? ''));
-                if ($subName === '') continue;
+                // if ($subName === '') continue;
 
                 [$subImagePath, $subImageUrl, $subImageDesc, $subImagesJson] =
                     $this->buildSubsectionImagesJson($sub['images'] ?? [], $i);
@@ -297,7 +297,7 @@ class ContentController extends BaseController
 
             foreach ($subsections as $i => $sub) {
                 $subName = trim((string) ($sub['name'] ?? ''));
-                if ($subName === '') continue;
+                // if ($subName === '') continue;
 
                 $subId = ! empty($sub['id']) ? (int) $sub['id'] : null;
 

@@ -426,7 +426,7 @@ if (empty($existingImages)) {
                                             <span class="drag-handle" onclick="event.stopPropagation()" title="Drag to reorder">⋮⋮</span>
                                             <span class="item-label">Subsection -<span class="subsection-order-label"><?= $i + 1 ?></span></span>
                                             <span class="item-preview-text subsection-preview-title"><?= !empty($sub['name']) ? esc(mb_strimwidth($sub['name'], 0, 50, '…')) : '' ?></span>
-                                        </div>dasd
+                                        </div>
                                         <div class="item-header-actions">
                                             <button type="button" class="btn btn-outline-danger btn-sm"
                                                     onclick="event.stopPropagation(); removeSubsection(this)">
@@ -879,7 +879,7 @@ function addSubsection() {
                         <label class="form-label">Title</label>
                         <input type="text" name="subsections[${si}][name]"
                                class="form-control subsection-name-input"
-                               placeholder="Title" oninput="autoSlugSubsection(this)" required>
+                               placeholder="Title" oninput="autoSlugSubsection(this)">
                     </div>
                     <div class="col-12 col-lg-6">
                         <label class="form-label">Slug</label>
