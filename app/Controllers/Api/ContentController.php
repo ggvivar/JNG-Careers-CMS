@@ -74,8 +74,8 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 'category' => [
                     'id' => (int) $categoryId ,
                     'name' => $row['category_name'] ?? '',
-                    'slug' => $row['slug'] ?? '',
-                    'listingTitle' => $row['listing_title'] ?? '',
+                    'slug' => url_title($row['category_slug'] ?? '', '-', true),
+                    'listingTitle' => $row['category_listing_title'] ?? '',
                 ],
                 'years' => []
             ];
@@ -383,6 +383,8 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 m.key2 as module_key2,
                 m.key3 as module_key3,
                 cat.name as category_name,
+                cat.name as category_listing_title,
+                cat.name as category_slug,
                 cat.key1 as category_key1,
                 cat.key2 as category_key2,
                 cat.key3 as category_key3,
