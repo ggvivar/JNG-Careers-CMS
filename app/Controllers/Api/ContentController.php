@@ -75,7 +75,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
                     'id' => (int) $categoryId ,
                     'name' => $row['category_name'] ?? '',
                     'slug' => url_title($row['category_name'] ?? '', '-', true),
-                    'listingTitle' => $row['category_name'] ?? '',
+                    'listingTitle' => $row['listing_title'] ?? '',
                 ],
                 'years' => []
             ];
