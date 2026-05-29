@@ -72,7 +72,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
         if (!isset($grouped[$categoryKey])) {
             $grouped[$categoryKey] = [
                 'category' => [
-                    'id' => $categoryId,
+                    'id' => (int) $categoryId ,
                     'name' => $row['category_name'] ?? '',
                     'slug' => url_title($row['category_name'] ?? '', '-', true),
                     'listingTitle' => $row['category_name'] ?? '',
@@ -135,7 +135,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 'content' => $section['description'] ?? '',
                 'excerpt' => $section['lead'] ?? '',
                 'images' => $sectionImages,
-                'order' => $section['rank'] ?? null,
+                'order' => (int)$section['rank'] ?? null,
             ];
         }
 
@@ -168,7 +168,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
             'images' => $images,
             'tags' => $tags,
             'sections' => $sections,
-            'rank' => $row['rank'] ?? null,
+            'rank' => (int)$row['rank'] ?? null,
             'status' => strtolower($row['status_name'] ?? 'published'),
             'publishedAt' => $row['validity_date_start'] ?? null,
             'expiresAt' => $row['validity_date_end'] ?? null,
