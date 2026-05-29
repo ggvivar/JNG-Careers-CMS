@@ -50,6 +50,8 @@ class CategoryController extends BaseController
             (new CategoryModel())->insert([
                 'module_id' => $this->request->getPost('module_id') ?: null,
                 'name' => trim((string) $this->request->getPost('name')),
+                'slug' => trim((string) $this->request->getPost('slug')),
+                'listing_title' => trim((string) $this->request->getPost('listing_title')),
                 'key1' => trim((string) $this->request->getPost('key1')) ?: null,
                 'key2' => trim((string) $this->request->getPost('key2')) ?: null,
                 'key3' => trim((string) $this->request->getPost('key3')) ?: null,
@@ -81,6 +83,8 @@ class CategoryController extends BaseController
             $model->update((int) $id, [
                 'module_id' => $this->request->getPost('module_id') ?: null,
                 'name' => trim((string) $this->request->getPost('name')),
+                'slug' => trim((string) $this->request->getPost('slug')),
+                'listing_title' => trim((string) $this->request->getPost('listing_title')),
                 'key1' => trim((string) $this->request->getPost('key1')) ?: null,
                 'key2' => trim((string) $this->request->getPost('key2')) ?: null,
                 'key3' => trim((string) $this->request->getPost('key3')) ?: null,

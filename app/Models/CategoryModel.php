@@ -13,6 +13,8 @@ class CategoryModel extends Model
     protected $allowedFields = [
         'module_id',
         'name',
+        'slug',
+        'listing_title',
         'key1',
         'key2',
         'key3',
