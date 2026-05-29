@@ -79,7 +79,6 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 ],
                 'years' => []
             ];
-            dd($row);
         }
 
         if (!isset($grouped[$categoryKey]['years'][$year])) {
