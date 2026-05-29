@@ -79,6 +79,7 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 ],
                 'years' => []
             ];
+            dd($row);
         }
 
         if (!isset($grouped[$categoryKey]['years'][$year])) {
@@ -383,8 +384,8 @@ private function respondGroupedByCategoryAndYear(array $rows)
                 m.key2 as module_key2,
                 m.key3 as module_key3,
                 cat.name as category_name,
-                cat.name as category_listing_title,
-                cat.name as category_slug,
+                cat.listing_title as category_listing_title,
+                cat.slug as category_slug,
                 cat.key1 as category_key1,
                 cat.key2 as category_key2,
                 cat.key3 as category_key3,
